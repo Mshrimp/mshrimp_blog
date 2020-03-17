@@ -1,4 +1,4 @@
-### Hexo+Github+Ubuntu搭建个人博客
+### Ubuntu+Hexo+Github搭建个人博客
 
 
 

@@ -1,7 +1,7 @@
 ---
 title: Qemu搭建ARM vexpress开发环境(一)
 date: 2019-07-30 21:37:50
-tags:
+tags: Qemu
 ---
 
 标签： Qemu ARM Linux
@@ -573,7 +573,7 @@ Writing superblocks and filesystem accounting information: done
 
 #### 3) 将rootfs烧写到SD卡：
 
-```
+```shell
 # sudo mount -t ext3 rootfs.ext3 /mnt -o loop
 # sudo cp -rf rootfs/* /mnt/
 # sudo umount /mnt
@@ -581,7 +581,15 @@ Writing superblocks and filesystem accounting information: done
 
 
 
+在开发过程中，如果需要修改SD卡中的内容，可以将SD卡的镜像rootfs.ext3挂载到/mnt目录下，直接操作/mnt来修改；
+
+```shell
+# sudo mount -t ext3 rootfs.ext3 /mnt -o loop
 ```
+
+
+
+```shell
 # cp rootfs.ext3 ~/qemu
 ```
 
