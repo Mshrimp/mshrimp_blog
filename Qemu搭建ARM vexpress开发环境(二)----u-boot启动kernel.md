@@ -371,7 +371,7 @@ make[1]: Leaving directory '/home/xiami/tool/linux-4.14.172/object'
 或者在Makefile中添加加载地址配置：
 
 ```
-# vim linux/arch/arm/boot/Makefile
+# vim arch/arm/boot/Makefile
 LOADADDR ?= 0x60003000
 ```
 再编译生成uImage文件:
