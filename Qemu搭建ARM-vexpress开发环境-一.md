@@ -14,14 +14,19 @@ tags: Qemu
 
 
 
+## 目录
+
 [TOC]
-
-
 
 下面简单介绍下我的Qemu开发环境搭建过程
 
+
+
 ## 1. 环境
+
 由于在开发过程中也需要Windows系统下的一些工具，双系统环境切换操作系统时必须重启，于是放弃了以前搭建的双系统环境，而采用在PC的Windows10系统下通过VirtualBox虚拟机安装Xubuntu系统进行开发，避免了双系统开发中需要不断重启切换PC系统的问题。Xubuntu系统和Ubuntu系统大同小异，只是桌面封装更加简洁。
+
+
 
 ### 1.1 所使用环境
 
@@ -34,7 +39,10 @@ tags: Qemu
 > 虚拟机系统：Xubuntu
 > 模拟的开发板：vexpress
 
+
+
 ### 1.2 搭建环境时使用的工具
+
 qemu-4.2.0
 linux-4.14.172(Linux Kernel)
 u-boot-2017.05
@@ -84,6 +92,8 @@ gcc version 7.5.0 (Ubuntu/Linaro 7.5.0-3ubuntu1~18.04)
 
 ### 3.2 下载Qemu源码编译安装
 
+
+
 #### 3.2.1 下载Qemu源码
 
 1. 从Git服务器下载Qemu代码，记着在下载之前选择并切换需要的源码分支：
@@ -98,6 +108,8 @@ gcc version 7.5.0 (Ubuntu/Linaro 7.5.0-3ubuntu1~18.04)
    登陆download.qemu.org网站，选择需要的版本，点击下载，或者右键后选使用迅雷下载，速度会更快：
 
    在这里选择qemu-4.2.0.tar.xz使用；
+
+
 
 #### 3.2.2 安装
 
@@ -181,6 +193,7 @@ Copyright (c) 2003-2019 Fabrice Bellard and the QEMU Project developers
 ```
 
 
+
 ### 3.4 查看Qemu支持的开发板
 
 Qemu工具支持大量开发板的虚拟，现存的大部分常用开发板都能很好地支持。通过下面的命令操作可以看到当前版本的Qemu工具支持的开发板列表：
@@ -241,7 +254,9 @@ vexpress-a9          ARM Versatile Express for Cortex-A9
 
 ### 4.3 编译Linux内核
 
-配置
+
+
+#### 4.3.1 配置
 
 ```
 $ make vexpress_defconfig ARCH=arm O=./object
@@ -265,7 +280,9 @@ make[1]: Leaving directory '/home/xiami/tool/linux-4.14.172/object'
 $ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- menuconfig -j4 O=./object
 ```
 
-全编译
+
+
+#### 4.3.2 编译
 
 ```
 $ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 O=./object
@@ -401,6 +418,8 @@ Hardware name: ARM-Versatile Express
 
 
 ### 5.3 配置并编译busybox
+
+
 
 #### 5.3.1 配置
 
