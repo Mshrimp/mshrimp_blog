@@ -560,6 +560,21 @@ br0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
 
 
 
+```
+=> ping 192.168.1.102
+smc911x: MAC 52:54:00:12:34:56
+smc911x: detected LAN9118 controller
+smc911x: phy initialized
+smc911x: MAC 52:54:00:12:34:56
+Using smc911x-0 device
+smc911x: MAC 52:54:00:12:34:56
+host 192.168.1.102 is alive
+```
+
+
+
+
+
 ## 5. 安装TFTP服务器
 
 创建TFTP服务器，用来给Qemu模拟开发板启动uImage时，下载uImage到内存中。
@@ -627,6 +642,7 @@ TFTP_OPTIONS="-l -c -s"
 
 ```
 # sudo /etc/init.d/tftpd-hpa restart
+[ ok ] Restarting tftpd-hpa (via systemctl): tftpd-hpa.service.
 ```
 
 
@@ -721,7 +737,7 @@ host 192.168.1.102 is alive
 #define CONFIG_BOOTCOMMAND  \
     "tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb;  \
     setenv bootargs 'root=/dev/nfs rw   \
-    nfsroot=192.168.1.102:/home/xiami/qemu/boot-uboot/rootfs init=/linuxrc   \
+    nfsroot=192.168.1.102:/home/xiami/qemu/nfs_root init=/linuxrc   \
     ip=192.168.1.110 console=ttyAMA0';  \
     bootm 0x60003000 - 0x60500000;"
 
@@ -731,7 +747,7 @@ host 192.168.1.102 is alive
 ```
 
 
-启动Qemu验证
+重新编译u-boot；启动Qemu验证
 ```
 # cat boot.sh
 #! /bin/sh

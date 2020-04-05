@@ -432,7 +432,7 @@ Hardware name: ARM-Versatile Express
 编译选择使用glibc动态库，因为静态库可能会出现一些未知的问题
 
 ```
-# make menuconfig
+# make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- menuconfig
 Settings  --->
     Build Options  --->
         [ ] Build static binary (no shared libs)
