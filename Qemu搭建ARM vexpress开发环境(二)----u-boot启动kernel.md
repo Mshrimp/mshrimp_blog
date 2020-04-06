@@ -9,19 +9,17 @@ tags: Qemu
 
 ---
 
-在上文《[Qemu搭建ARM vexpress开发环境(一)](https://www.jianshu.com/p/94833e841742)》中已经简单讲述了通过Qemu直接启动Linux内核，并挂载SD卡根文件系统的方法，这种方法是直接启动内核，与实际应用中ARM板的启动方式：u-boot、kernel、rootfs有些不同。现在就来讲述下用Qemu搭建通过u-boot启动Linux内核并挂载根文件系统的方法。
-
-<!--more-->
-
-
-
 ## 目录
 
 [TOC]
 
+## 0. 简述
+
+在上文《[Qemu搭建ARM vexpress开发环境(一)](https://www.jianshu.com/p/94833e841742)》中已经简单讲述了通过Qemu直接启动Linux内核，并挂载SD卡根文件系统的方法，这种方法是直接启动内核，与实际应用中ARM板的启动方式：u-boot、kernel、rootfs有些不同。现在就来讲述下用Qemu搭建通过u-boot启动Linux内核并挂载根文件系统的方法。
 
 
-## 1. 开发环境简述
+
+## 1. 环境
 
 嵌入式系统要正常运行，应该包含：u-boot、kernel、rootfs、appfs。这几部分在ARM开发板Flash上的位置关系应该类似于下图所示：
 

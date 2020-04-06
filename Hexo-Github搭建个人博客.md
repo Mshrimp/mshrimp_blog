@@ -1,16 +1,16 @@
----
-title: Hexo+Github搭建个人博客
-date: 2019-07-17 20:24:52
-tags: Hexo Github 博客
----
+## Hexo-Github搭建个人博客
 
 
+
+### 目录
+
+[TOC]
 
 ### 1. 简介
 
 首次通过Hexo和Github搭建自己的博客，尝试成功，从别人那里借来个yilia主题，看着挺漂亮，索性直接当我的主题用了，虽然还不会太多的配置操作，先把自己搭建博客过程中的主要操作记录下来。
 
-<!--more-->
+
 
 #### 环境简介
 
@@ -387,23 +387,19 @@ hexo clean #clean 清除缓存文件 (db.json) 和已生成的静态文件 (publ
 
 ### 6. 更换主题
 
-
+不喜欢原来自带的主题，找了一个比较好看的yilia主题，需要先Github中将yilia主题的源码下载到博客目录的themes目录下；
 
 ```
-$ git clone https://github.com/litten/hexo-theme-yilia.git themes/yilia
-Cloning into 'themes/yilia'...
-remote: Enumerating objects: 1, done.
-remote: Counting objects: 100% (1/1), done.
-remote: Total 2037 (delta 0), reused 0 (delta 0), pack-reused 2036
-Receiving objects: 100% (2037/2037), 10.52 MiB | 38.00 KiB/s, done.
-Resolving deltas: 100% (1093/1093), done.
+# git clone https://github.com/litten/hexo-theme-yilia.git themes/yilia
 ```
 
+在博客根目录下，修改_config.yml文件的themes：
 
+```
+themes: yilia
+```
 
-
-
-
+这个主题中的一些配置，可以根据需要自行修改，配置文件为themes/yilia/_config.yml；
 
 
 

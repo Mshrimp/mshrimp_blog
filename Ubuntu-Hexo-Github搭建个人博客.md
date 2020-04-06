@@ -1,6 +1,12 @@
-### Ubuntu+Hexo+Github搭建个人博客
+## Ubuntu-Hexo+Github搭建个人博客
 
 
+
+### 目录
+
+[TOC]
+
+### 1. 简介
 
 #### 环境
 
@@ -11,24 +17,39 @@ Linux xiami 5.3.0-40-generic #32~18.04.1-Ubuntu SMP Mon Feb 3 14:05:59 UTC 2020 
 
 
 
+### 2. Git安装及配置
+
+#### 2.1 安装Git
+
+使用命令安装Git工具：
+
+```
+# sudo apt install git
+```
+
+查看是否安张成功：
+
+```
+# git --version
+git version 2.17.1
+```
 
 
-### 2. Github仓库创建和配置
 
-#### 2.1 创建Git仓库
+#### 2.2 创建Git仓库
 
 打开GitHub，点击“New repository”，创建一个新仓库，用来专门存放博客日志信息；仓库名要按照格式：账户名.github.io，比如：Mshrimp.github.io；否则，后边的操作会出现问题；创建仓库时勾选上“
 Initialize this repository with a README”；
 
 进入创建好的仓库Mshrimp.github.io，点击右侧的“Settings”，向下拉找到Github Pages，会看到网站是：https://mshrimp.github.io/，点击就可以访问，也可以通过外网访问，这时这个博客项目已经部署到网站上了，但是是个空的网站，没有内容；这个网址是博客的默认地址，如果有兴趣可以自己购买域名换成想要的地址。
 
-![Image](Hexo-Github-Ubuntu搭建个人博客/Image.png)
+![Image](Ubuntu-Hexo-Github搭建个人博客/Image.png)
 
-![Image2](Hexo-Github-Ubuntu搭建个人博客/Image2.png)
+![Image2](Ubuntu-Hexo-Github搭建个人博客/Image2.png)
 
 
 
-#### 2.2 配置git仓库
+#### 2.3 配置git仓库
 
 如果是第一次使用git，就需要先配置git环境，否则可以跳过；
 
@@ -91,13 +112,13 @@ ssh-rsa
 
 
 
-#### 2.3 把本地公钥添加到github中
+#### 2.4 添加公钥
 
-在GitHub中，点击右侧图像下拉选项，选择“Settings”，在“SSH and GPG keys”中，点击“New SSH key”，并将~/.ssh/id_rsa.pub文件里的内容复制上去，保存退出；
+把本地公钥添加到github中；在GitHub中，点击右侧图像下拉选项，选择“Settings”，在“SSH and GPG keys”中，点击“New SSH key”，并将~/.ssh/id_rsa.pub文件里的内容复制上去，保存退出；
 
-![Image4](Hexo-Github-Ubuntu搭建个人博客/Image4.png)
+![Image4](Ubuntu-Hexo-Github搭建个人博客/Image4.png)
 
-![Image5](Hexo-Github-Ubuntu搭建个人博客/Image5.png)
+![Image5](Ubuntu-Hexo-Github搭建个人博客/Image5.png)
 
 
 
@@ -113,92 +134,65 @@ Hi Mshrimp! You've successfully authenticated, but GitHub does not provide shell
 
 ### 3. Node安装
 
+命令行安装：
+
+```
+# sudo apt-get install nodejs
+# sudo apt install npm
+```
+
+查看nodejs工具是否安装成功：
+
+```
+# nodejs -v
+v8.10.0
+```
+
 
 
 ### 4. Hexo安装及配置
 
 先创建一个hexo操作的文件目录
 
-![Image1](Hexo-Github-Ubuntu搭建个人博客/Image1.png)
+![Image1](Ubuntu-Hexo-Github搭建个人博客/Image1.png)
 
 如果使用的是Linux系统，可以直接在命令行中输入命令操作，如果是windows系统，用管理员权限打开“命令提示符”，使用命令在电脑上安装hexo；或者，在hexo目录上右键，选择“Git Bash Here”，用git bash工具打开hexo目录，在git bash中使用命令操作；
 
 #### 4.1 安装hexo
 
 ```
-$ npm install hexo -g
-
-C:\Users\Kevin-TP\AppData\Roaming\npm\hexo -> 
-C:\Users\Kevin-TP\AppData\Roaming\npm\node_modules\hexo\bin\hexo
-npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@2.1.2 
-(node_modules\hexo\node_modules\fsevents):
-npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for 
-fsevents@2.1.2: wanted {"os":"darwin","arch":"any"} (current: 
-{"os":"win32","arch":"x64"})
-npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.11 
-(node_modules\hexo\node_modules\nunjucks\node_modules\fsevents):
-npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for 
-fsevents@1.2.11: wanted {"os":"darwin","arch":"any"} (current: 
-{"os":"win32","arch":"x64"})
-
-+ hexo@4.2.0
-added 36 packages from 40 contributors, removed 30 packages, updated 58 packages 
-and moved 5 packages in 19.178s
+# npm install hexo-cli -g
+# npm install hexo -g
 ```
+
+
 
 检查hexo是否安装成功
 
 ```
 $ hexo -v
-hexo-cli: 2.0.0
-os: Windows_NT 10.0.18362 win32 x64
-http_parser: 2.8.0
-node: 10.16.0
-v8: 6.8.275.32-node.52
-uv: 1.28.0
+hexo: 4.2.0
+hexo-cli: 3.1.0
+os: Linux 5.3.0-45-generic linux x64
+http_parser: 2.7.1
+node: 8.10.0
+v8: 6.2.414.50
+uv: 1.18.0
 zlib: 1.2.11
-brotli: 1.0.7
-ares: 1.15.0
-modules: 64
-nghttp2: 1.34.0
-napi: 4
-openssl: 1.1.1b
-icu: 64.2
-unicode: 12.1
-cldr: 35.1
-tz: 2019a
+ares: 1.14.0
+modules: 57
+nghttp2: 1.30.0
+openssl: 1.0.2n
+icu: 60.2
+unicode: 10.0
+cldr: 32.0.1
+tz: 2017c
 ```
 
 #### 4.2 初始化hexo文件夹
 
 ```
-$ hexo init
-INFO  Cloning hexo-starter https://github.com/hexojs/hexo-starter.git
-Cloning into 'G:\hexo_git'...
-remote: Enumerating objects: 9, done.
-remote: Counting objects: 100% (9/9), done.
-remote: Compressing objects: 100% (7/7), done.
-remote: Total 77 (delta 4), reused 5 (delta 2), pack-reused 68
-Unpacking objects: 100% (77/77), done.
-Submodule 'themes/landscape' (https://github.com/hexojs/hexo-theme-landscape.git) registered for path 'themes/landscape'
-Cloning into 'G:/hexo_git/themes/landscape'...
-remote: Enumerating objects: 33, done.
-remote: Counting objects: 100% (33/33), done.
-remote: Compressing objects: 100% (29/29), done.
-remote: Total 929 (delta 12), reused 15 (delta 3), pack-reused 896
-Receiving objects: 100% (929/929), 2.56 MiB | 9.00 KiB/s, done.
-Resolving deltas: 100% (492/492), done.
-Submodule path 'themes/landscape': checked out '73a23c51f8487cfcd7c6deec96ccc7543960d350'
-INFO  Install dependencies
-npm WARN deprecated core-js@1.2.7: core-js@<2.6.8 is no longer maintained. Please, upgrade to core-js@3 or at least to actual version of core-js@2.
-npm notice created a lockfile as package-lock.json. You should commit this file.
-npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.9 (node_modules\fsevents):
-npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.9: wanted {"os":"darwin","arch":"any"} (current: {"os":"win32","arch":"x64"})
-
-added 340 packages from 500 contributors and audited 6879 packages in 29.578s
-found 0 vulnerabilities
-
-INFO  Start blogging with Hexo!
+# hexo init
 ```
 
 看到“Start blogging with Hexo！”打印，说明初始化完成；
@@ -206,13 +200,13 @@ INFO  Start blogging with Hexo!
 输入npm install，安装所需要的组件
 
 ```
-$ npm install
+# npm install
 ```
 
 hexo已经安装并初始化完成；
 
 ```
-$ ls
+# ls
 _config.yml  node_modules/  package.json  package-lock.json  scaffolds/  source/  themes/
 ```
 
@@ -228,7 +222,7 @@ $ hexo s #server 启动服务器。
 
 在浏览器地址栏输入“http://localhost:4000/”打开页面，是一个空的博客网页；
 
-![Image3](Hexo-Github-Ubuntu搭建个人博客/Image3.JPG)
+![Image3](Ubuntu-Hexo-Github搭建个人博客/Image3.JPG)
 
 
 
@@ -272,5 +266,79 @@ $ hexo deploy
 
 
 
+### 5. 更换主题
 
+不喜欢原来自带的主题，找了一个比较好看的yilia主题，需要先Github中将yilia主题的源码下载到博客目录的themes目录下；
+
+```
+# git clone https://github.com/litten/hexo-theme-yilia.git themes/yilia
+```
+
+在博客根目录下，修改_config.yml文件的themes：
+
+```
+themes: yilia
+```
+
+这个主题中的一些配置，可以根据需要自行修改，配置文件为themes/yilia/_config.yml；
+
+效果如下：
+
+![themes-yilia](Ubuntu-Hexo-Github搭建个人博客/themes-yilia.png)
+
+
+
+### 6. 博客迁移
+
+#### 6.1 常规迁移
+
+以前部署的Hexo博客是在Windows上搭建的，现在安装了Ubuntu-18.04.1，需要重新搭建博客；为了兼容以前的windows博客，需要使用以前的Hexo下的几个文件夹：
+
+```
+_config.yml  package.json  source/  themes/
+```
+
+这时，在Ubuntu系统上创建文件夹hexo，以hexo为主目录搭建博客环境：
+
+```
+# mkdir hexo
+# cd hexo
+# hexo init
+```
+
+将上边四个文件或文件夹复制到hexo目录替换：
+
+```
+# cp _config.yml  package.json  source  themes . -rf
+```
+
+之后就可以按照hexo命令进行操作了；
+
+
+
+#### 6.2 特殊情况
+
+由于我的实际情况是，不但将hexo中的博客文件保存在了Github上，还将hexo生成的环境工程，以并保存在Github同一个工程的其他分支了，如：ubuntu分支；这样我就可以一并保存所有文件了；
+
+在这种特殊情况下，博客迁移操作原理上和常规迁移一样，只是操作稍微不同；
+
+将以前用的工程在Ubuntu环境中克隆下来，Mshrimp.github.io；
+
+新建hexo目录，并初始化hexo目录：
+
+```
+# mkdir hexo
+# cd hexo
+# hexo init
+# ls
+_config.yml  node_modules/  package.json  package-lock.json  scaffolds/  source/  themes/
+```
+
+将hexo中生成的文件或文件夹复制到Mshrimp.github.io目录替换：
+
+```
+node_modules/  package-lock.json  scaffolds/
+```
+
+这个操作，和常规迁移的区别是，复制的方向相反，其余都一样；
 
