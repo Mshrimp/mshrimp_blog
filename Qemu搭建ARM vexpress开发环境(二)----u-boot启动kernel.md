@@ -1,25 +1,27 @@
 ---
 title: Qemu搭建ARM vexpress开发环境(二)----u-boot启动kernel
-date: 2019-08-30 21:00:00
+date: 2019-08-20 21:00:00
 tags: Qemu
 
 ---
 
-标签： Qemu ARM Linux u-boot
+标签： Qemu
 
 ---
+
+在上文《[Qemu搭建ARM vexpress开发环境(一)](https://www.jianshu.com/p/94833e841742)》中已经简单讲述了通过Qemu直接启动Linux内核，并挂载SD卡根文件系统的方法，这种方法是直接启动内核，与实际应用中ARM板的启动方式：u-boot、kernel、rootfs有些不同。现在就来讲述下用Qemu搭建通过u-boot启动Linux内核并挂载根文件系统的方法。
+
+<!--more-->
+
+
 
 ## 目录
 
 [TOC]
 
-## 0. 简述
-
-在上文《[Qemu搭建ARM vexpress开发环境(一)](https://www.jianshu.com/p/94833e841742)》中已经简单讲述了通过Qemu直接启动Linux内核，并挂载SD卡根文件系统的方法，这种方法是直接启动内核，与实际应用中ARM板的启动方式：u-boot、kernel、rootfs有些不同。现在就来讲述下用Qemu搭建通过u-boot启动Linux内核并挂载根文件系统的方法。
 
 
-
-## 1. 环境
+## 1. 简述
 
 嵌入式系统要正常运行，应该包含：u-boot、kernel、rootfs、appfs。这几部分在ARM开发板Flash上的位置关系应该类似于下图所示：
 
@@ -40,20 +42,22 @@ rootfs可以添加到开发板的Flash，也可以不用添加到开发板，而
 
 
 ## 2. 准备u-boot
+
+
 用来使用u-boot启动加载Linux内核
 
 
 
 ### 2.1 下载u-boot
 
-从http://ftp.denx.de/pub/u-boot网站选择一个u-boot版本源码下载，本文中使用的是u-boot-2020.01版本。
+从 http://ftp.denx.de/pub/u-boot 网站选择一个u-boot版本源码下载，本文中使用的是u-boot-2020.01版本。
 
 
 
 ### 2.2 解压u-boot
 
 解压u-boot:
-```
+```shell
 # tar -xvf u-boot-2020.01.tar.bz2
 ```
 
@@ -69,7 +73,7 @@ rootfs可以添加到开发板的Flash，也可以不用添加到开发板，而
 
 ##### 配置命令
 
-```
+```shell
 # make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- vexpress_ca9x4_defconfig
 ```
 
@@ -77,7 +81,7 @@ rootfs可以添加到开发板的Flash，也可以不用添加到开发板，而
 
 如果没有修改Makefile和config.mk文件，需要在编译时加上ARCH和CROSS_COMPILE的配置；在编译u-boot时可能会出现一些问题，只要逐个问题解决就可以编译完成了；
 
-```
+```shell
 /bin/sh: 1: bison: not found
 scripts/Makefile.lib:226: recipe for target 'scripts/kconfig/zconf.tab.c' failed
 make[1]: *** [scripts/kconfig/zconf.tab.c] Error 127
@@ -87,7 +91,7 @@ make: *** [vexpress_ca9x4_defconfig] Error 2
 
 
 
-```
+```shell
 # sudo apt-get install bison
 ```
 
@@ -95,7 +99,7 @@ make: *** [vexpress_ca9x4_defconfig] Error 2
 
 
 
-```
+```shell
 /bin/sh: 1: flex: not found
 scripts/Makefile.lib:218: recipe for target 'scripts/kconfig/zconf.lex.c' failed
 make[1]: *** [scripts/kconfig/zconf.lex.c] Error 127
@@ -105,13 +109,13 @@ make: *** [vexpress_ca9x4_defconfig] Error 2
 
 
 
-```
+```shell
 # sudo apt-get install flex
 ```
 
 
 
-```
+```shell
 # make vexpress_ca9x4_defconfig ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- O=./object
 # make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- O=./object -j4
 scripts/kconfig/conf  --syncconfig Kconfig
@@ -126,7 +130,7 @@ make: *** [checkgcc6] Error 1
 
 
 
-```
+```shell
 # vim arch/arm/config.mk
 ifeq ($(CONFIG_$(SPL_)SYS_THUMB_BUILD),y)
 #archprepare: checkthumb checkgcc6
@@ -155,7 +159,7 @@ endif
 
 #### 2.3.2 生成配置文件
 
-```
+```shell
 # make vexpress_ca9x4_defconfig ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- O=./object
 make[1]: Entering directory '/home/xiami/tool/u-boot-2020.01/object'
   HOSTCC  scripts/basic/fixdep
@@ -177,14 +181,16 @@ make[1]: Leaving directory '/home/xiami/tool/u-boot-2020.01/object'
 
 
 
-```
+```shell
 # ls object/.config -l
 -rw-r--r-- 1 xiami xiami 22698 Mar 17 23:20 object/.config
 ```
 
 
 
-```
+如果需要修改配置文件中的一些选项，可以通过以下界面操作选择：
+
+```shell
 # make menuconfig ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- O=./object
 ```
 
@@ -192,7 +198,7 @@ make[1]: Leaving directory '/home/xiami/tool/u-boot-2020.01/object'
 
 #### 2.3.3 编译
 
-```
+```shell
 # make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 O=./object
 ```
 
@@ -203,19 +209,19 @@ make[1]: Leaving directory '/home/xiami/tool/u-boot-2020.01/object'
 这种方式编译比较直接，但是在调试时，需要多次编译u-boot，参数太多会带来不便，于是可以通过以下方法，修改Makefile和config.mk文件中的ARCH和CROSS_COMPILE选项，在编译的时候就可以省去了在编译命令中添加编译配置的设置。
 
 修改Makefile
-```
+```shell
 # vim Makefile
 CROSS_COMPILE = arm-linux-gnueabi-
 ```
 修改config.mk
-```
+```shell
 # vim config.mk
 ARCH = arm
 ```
 
 
 编译u-boot:
-```
+```shell
 # make vexpress_ca9x4_defconfig
 # make -j4
 ```
@@ -225,7 +231,7 @@ ARCH = arm
 ### 2.4 启动u-boot
 
 通过Qemu启动命令启动u-boot：
-```
+```shell
 # qemu-system-arm -M vexpress-a9 -m 512M -nographic -kernel ./u-boot
 
 U-Boot 2020.01 (Mar 17 2020 - 23:21:36 +0800)
@@ -244,8 +250,9 @@ Hit any key to stop autoboot:  0
 =>
 ```
 
+查看u-boot的版本：
 
-```
+```shell
 => version
 U-Boot 2020.01 (Mar 20 2020 - 23:01:23 +0800)
 
@@ -255,10 +262,8 @@ GNU ld (GNU Binutils for Ubuntu) 2.30
 
 
 
-
-
 打印u-boot的环境变量：
-```
+```shell
 => print
 arch=arm
 baudrate=38400
@@ -274,11 +279,7 @@ vendor=armltd
 Environment size: 2656/262140 bytes
 ```
 
-
-
 至此，u-boot启动成功，下一步开始配置u-boot的内核启动参数，来启动Linux内核，并挂在根文件系统。
-
-
 
 
 
@@ -286,8 +287,18 @@ Environment size: 2656/262140 bytes
 
 
 
-```
-$ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- uImage -j4 O=./object
+### 3.1 指定加载地址
+
+使用u-boot引导内核启动，需要内核的uImage镜像：
+
+> 需要将内核编译为uImage格式，需要指定uImage在内存中的加载地址，编译内核时指定：make LOADADDR=? uImage -j4
+
+
+
+如果不指定LOADADDR参数，编译时会报错，如下：
+
+```shell
+# make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- uImage -j4 O=./object
 make[1]: Entering directory '/home/xiami/tool/linux-4.14.172/object'
 ......
   Kernel: arch/arm/boot/Image is ready
@@ -306,24 +317,14 @@ make: *** [sub-make] Error 2
 
 
 
-
-
-
-
-使用u-boot引导内核镜像：
-    需要将内核编译为uImage格式
-    需要指定uImage在内存中的加载地址
-    编译内核时指定：make LOADADDR=? uImage -j4
-
 在内核目录直接编译：
-```
+```shell
 # make LOADADDR=0x60003000 uImage -j4
+```
+
+
+```shell
 # make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- LOADADDR=0x60003000 uImage -j4 O=./object
-```
-
-
-```
-$ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- LOADADDR=0x60003000 uImage -j4 O=./object
 make[1]: Entering directory '/home/xiami/tool/linux-4.14.172/object'
 ......
   Kernel: arch/arm/boot/Image is ready
@@ -341,23 +342,20 @@ make: *** [sub-make] Error 2
 
 
 
-```
-$ sudo apt-get install u-boot-tools
+第一次编译会报错，提示没有找到mkimage工具，需要手动安装u-boot-tools即可；
+
+```shell
+# sudo apt-get install u-boot-tools
 ```
 
 
 
-```
-$ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- LOADADDR=0x60003000 uImage -j4 O=./object
+### 3.2 编译uImage
+
+```shell
+# make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- LOADADDR=0x60003000 uImage -j4 O=./object
 make[1]: Entering directory '/home/xiami/tool/linux-4.14.172/object'
 ......
-  Kernel: arch/arm/boot/Image is ready
-  Kernel: arch/arm/boot/zImage is ready
-  UIMAGE  arch/arm/boot/uImage
-Image Name:   Linux-4.14.172
-Created:      Fri Mar 20 22:48:11 2020
-Image Type:   ARM Linux Kernel Image (uncompressed)
-Data Size:    3971512 Bytes = 3878.43 KiB = 3.79 MiB
 Load Address: 60003000
 Entry Point:  60003000
   Kernel: arch/arm/boot/uImage is ready
@@ -368,26 +366,26 @@ make[1]: Leaving directory '/home/xiami/tool/linux-4.14.172/object'
 
 或者在Makefile中添加加载地址配置：
 
-```
+```shell
 # vim arch/arm/boot/Makefile
 LOADADDR ?= 0x60003000
 ```
 再编译生成uImage文件:
-```
+```shell
 # make uImage -j4
 ```
 
 
 
-## 4. 虚拟机的Qemu网络功能设置
+## 4. Qemu网络功能设置
 
 Qemu虚拟机在u-boot启动时，需要将uImage加载到内存，而uImage从哪里来？可以通过TFTP服务器下载uImage到内存指定地址。而在这之前需要通过桥接方式将网络链接到Ubuntu系统。
-
-如果不是通过虚拟机，而是直接安装的Ubuntu系统，那就不需要设置网络桥接功能了，可以跳过这一步了；
 
 
 
 ### 4.1 配置Qemu与主机的网络连接
+
+
 
 采用桥接网络连接Host主机通信
 主机内核需要支持tun/tap模块
@@ -399,13 +397,13 @@ Qemu虚拟机在u-boot启动时，需要将uImage加载到内存，而uImage从�
 #### 1) 安装工具
 
 安装桥接网络依赖的两个工具：
-```
+```shell
 # sudo apt install uml-utilities bridge-utils
 ```
 
 创建tun设备文件：/dev/net/tun（一般会自动创建）
 
-```
+```shell
 # ls /dev/net/tun -l
 crw-rw-rw- 1 root root 10, 200 Mar 20 21:31 /dev/net/tun
 ```
@@ -416,7 +414,7 @@ crw-rw-rw- 1 root root 10, 200 Mar 20 21:31 /dev/net/tun
 
 修改/etc/network/interfaces文件配置网络
 
-```
+```shell
 # sudo vim /etc/network/interfaces
 # interfaces(5) file used by ifup(8) and ifdown(8)
 auto lo
@@ -435,7 +433,7 @@ bridge_ports enp0s25
 
 默认情况下，当qemu使用tap设备时，会执行/etc/qemu-ifup和/etc/qemu-ifdown这两个脚本；需要创建这两个脚本，并加上可执行权限；
 
-```
+```shell
 # cat /etc/qemu-ifup
 #!/bin/sh
 
@@ -456,7 +454,7 @@ brctl show
 
 
 
-```
+```shell
 # ifconfig
 enp0s25: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         inet 192.168.1.102  netmask 255.255.255.0  broadcast 192.168.1.255
@@ -473,7 +471,7 @@ enp0s25: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
 
 查询到enp0s25的IP地址是192.168.1.102，需要将br0配置在同一个192.168.1.***网段；
 
-```
+```shell
 # cat /etc/qemu-ifdown
 #!/bin/sh
 
@@ -489,7 +487,7 @@ brctl show
 
 
 
-```
+```shell
 # chmod a+x /etc/qemu-ifup
 # chmod a+x /etc/qemu-ifdown
 ```
@@ -504,7 +502,7 @@ brctl show
 
 #### 1) 关闭防火墙
 
-```
+```shell
 # sudo ufw disable
 Firewall stopped and disabled on system startup
 ```
@@ -513,7 +511,7 @@ Firewall stopped and disabled on system startup
 
 #### 2) 查看当前防火墙状态
 
-```
+```shell
 # sudo ufw status
 Status: inactive
 ```
@@ -522,7 +520,7 @@ Status: inactive
 
 另外，附上开启防火墙的操作方法：
 
-```
+```shell
 # ufw enable
 ```
 
@@ -530,11 +528,11 @@ Status: inactive
 
 ### 4.4 重启系统，使配置生效
 
-```
+```shell
 # reboot
 ```
 或者：
-```
+```shell
 # init 6
 ```
 
@@ -542,7 +540,7 @@ Status: inactive
 
 ### 4.5 查看Qemu的网络环境
 
-```
+```shell
 # ifconfig
 br0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         inet 192.168.1.102  netmask 255.255.255.0  broadcast 192.168.1.255
@@ -554,11 +552,11 @@ br0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
 ```
 
-虚拟网口br0即Qemu虚拟机与Linux主机通讯的网口
+虚拟网口br0即Qemu虚拟机与Linux主机通讯的网口；
 
+在u-boot中测试网络是否接通：
 
-
-```
+```shell
 => ping 192.168.1.102
 smc911x: MAC 52:54:00:12:34:56
 smc911x: detected LAN9118 controller
@@ -568,8 +566,6 @@ Using smc911x-0 device
 smc911x: MAC 52:54:00:12:34:56
 host 192.168.1.102 is alive
 ```
-
-
 
 
 
@@ -585,7 +581,7 @@ host 192.168.1.102 is alive
 
 安装Linux主机Host的TFTP服务器工具：
 
-```
+```shell
 # sudo apt install tftp-hpa tftpd-hpa xinetd
 ```
 
@@ -597,7 +593,7 @@ host 192.168.1.102 is alive
 
 #### 1) 修改配置文件，设置TFTP服务器目录
 
-```
+```shell
 # sudo vim /etc/default/tftpd-hpa
 ......
 TFTP_USERNAME="xiami"
@@ -629,7 +625,7 @@ TFTP_OPTIONS="-l -c -s"
 
 #### 2) Linux主机上创建tftp目录
 
-```
+```shell
 # mkdir /home/mcy/tftpboot
 # chmod 777 /home/mcy/tftpboot
 ```
@@ -638,14 +634,14 @@ TFTP_OPTIONS="-l -c -s"
 
 #### 3) 重启tftp服务
 
-```
+```powershell
 # sudo /etc/init.d/tftpd-hpa restart
 [ ok ] Restarting tftpd-hpa (via systemctl): tftpd-hpa.service.
 ```
 
 
 
-### 5.3 测试
+### 5.3 测试验证
 
 #### 1) 测试tftp服务器
 
@@ -673,9 +669,20 @@ quit/q: 退出TFTP服务
 
 
 
-```
-# vim include/configs/vexpress_common.h
+### 6.1 设置u-boot参数
 
+u-boot能够正常启动还不足以引导内核启动，需要在u-boot中设置一些启动参数，在引导内核启动时，将这些启动参数传递给内核；内核启动后挂载SD卡中的文件系统；
+
+这些启动参数，可以在u-boot启动后，手动设置，也可以在u-boot中，把内核启动参数写入vexpress_common.h头文件；
+
+
+
+#### 1） 写入u-boot头文件
+
+修改vexpress_common.h头文件，添加内核启动需要的参数：
+
+```c
+# vim include/configs/vexpress_common.h
 #define CONFIG_BOOTCOMMAND  \
     "tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb;  \
     setenv bootargs 'root=/dev/mmcblk0 rw   \
@@ -688,48 +695,44 @@ quit/q: 退出TFTP服务
 #define CONFIGN_NETMASK 255.255.255.0
 ```
 
+参数说明：
 
-
-```
-sudo qemu-system-arm \
-	-M vexpress-a9 \
-	-m 512M \
-	-kernel ./u-boot \
-	-nographic \
-	-append console=ttyAMA0 \
-	-sd rootfs.ext3 \
-	-net nic \
-	-net tap
-```
+> CONFIG_IPADDR： 设备的本地IP地址
+>
+> CONFIG_SERVERIP： TFTP下载时的服务器IP地址
+>
+> CONFIG_BOOTCOMMAND： 内核启动的参数设置，包含boot_args
 
 
 
-```
-=> print bootcmd
-bootcmd=tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; setenv bootargs 'root=/dev/mmcblk0 rw init=/linuxrc ip=192.168.1.110 console=ttyAMA0'; bootm 0x60003000 - 0x60500000;
-=> print ipaddr
-ipaddr=192.168.1.110
-=> print serverip
-serverip=192.168.1.102
+#### 2） 手动设置
+
+在u-boot启动之后，手动设置环境变量：
+
+```shell
+=> setenv ipaddr 192.168.1.110
+=> setenv serverip 192.168.1.102
+=> setenv bootargs 'root=/dev/mmcblk0 rw init=/linuxrc ip=192.168.1.110 console=ttyAMA0'
 ```
 
+手动设置tftp下载：
 
-
-```
-=> ping 192.168.1.102
-smc911x: MAC 52:54:00:12:34:56
-smc911x: detected LAN9118 controller
-smc911x: phy initialized
-smc911x: MAC 52:54:00:12:34:56
-Using smc911x-0 device
-smc911x: MAC 52:54:00:12:34:56
-host 192.168.1.102 is alive
+```shell
+=> tftp 0x60003000 uImage	// tftp下载内核镜像
+=> tftp 0x60500000 vexpress-v2p-ca9.dtb		// tftp下载设备树
+=> bootm 0x60003000 - 0x60500000	// 启动内核
 ```
 
+手动设置用来调试比较方便，但是正常使用时，还是将设置参数写入u-boot的vexpress_common.h头文件比较好，免得每次启动都需要输入这么多命令；
 
 
 
-```
+#### 3） 设置挂载nfs网络文件系统
+
+如果需要通过nfs挂载网络文件系统，需要在u-boot中，设置boot_args，如下：
+
+
+```c
 # vim include/configs/vexpress_common.h
 
 #define CONFIG_BOOTCOMMAND  \
@@ -746,23 +749,8 @@ host 192.168.1.102 is alive
 
 
 重新编译u-boot；启动Qemu验证
-```
-# cat boot.sh
-#! /bin/sh
-qemu-system-arm \
-        -M vexpress-a9  \
-        -m 512M \
-        -kernel u-boot   \   
-        #-dtb kernel/linux-4.4.157/arch/arm/boot/dts/vexpress-v2p-ca9.dtb    \   
-        -nographic  \
-        -net nic,vlan=0 -net tap,vlan=0,ifname=tap0    \
-        #-append "root=/dev/mmcblk0 rw console=ttyAMA0"    \
-        -sd rootfs.ext3
-```
 
-
-
-```
+```shell
 => print bootcmd
 bootcmd=tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; setenv bootargs 'root=/dev/nfs rw nfsroot=192.168.1.102:/home/xiami/qemu/boot-uboot/rootfs init=/linuxrc ip=192.168.1.110 console=ttyAMA0'; bootm 0x60003000 - 0x60500000;
 => print ipaddr
@@ -771,11 +759,9 @@ ipaddr=192.168.1.110
 serverip=192.168.1.102
 ```
 
+网络还没有ping通：
 
-
-
-
-```
+```shell
 => ping 192.168.1.102
 smc911x: MAC 52:54:00:12:34:56
 smc911x: detected LAN9118 controller
@@ -788,9 +774,59 @@ smc911x: MAC 52:54:00:12:34:56
 ping failed; host 192.168.1.102 is not alive
 ```
 
+这部分在下一节中再讲述，此处略过；
 
 
-启动验证
+
+### 6.2 启动验证
+
+#### 1） 启动Qemu，并检查启动参数
+
+```powershell
+# cat boot.sh
+#! /bin/sh
+sudo qemu-system-arm \
+	-M vexpress-a9 \
+	-m 512M \
+	-kernel ./u-boot \
+	-nographic \
+	-append console=ttyAMA0 \
+	-sd rootfs.ext3 \
+	-net nic \
+	-net tap
+```
+
+
+
+u-boot启动后，查看u-boot中的环境变量：
+
+```shell
+=> print bootcmd
+bootcmd=tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; setenv bootargs 'root=/dev/mmcblk0 rw init=/linuxrc ip=192.168.1.110 console=ttyAMA0'; bootm 0x60003000 - 0x60500000;
+=> print ipaddr
+ipaddr=192.168.1.110
+=> print serverip
+serverip=192.168.1.102
+```
+
+
+
+检查tftp下载网络，在开发板的u-boot中，ping本地PC的tftp服务器，注意，不要用电脑ping开发板，因为u-boot中没有回应机制，是ping不通开发板的；
+
+```shell
+=> ping 192.168.1.102
+smc911x: MAC 52:54:00:12:34:56
+smc911x: detected LAN9118 controller
+smc911x: phy initialized
+smc911x: MAC 52:54:00:12:34:56
+Using smc911x-0 device
+smc911x: MAC 52:54:00:12:34:56
+host 192.168.1.102 is alive
+```
+
+
+
+#### 2） 启动验证
 
 
 
@@ -990,7 +1026,13 @@ smc911x: MAC 52:54:00:12:34:56
 
 ```
 
-至此，rootfs目录下就是一个简易的根文件系统，可以将它制作成一个镜像文件，将镜像文件烧写到开发板，或者通过Qemu中的u-boot启动Linux内核后挂载到镜像文件上。也可以设置为通过NFS网络文件系统启动，参考下一篇文章《[Qemu搭建ARM vexpress开发环境(三)----NFS网络根文件系统](https://www.jianshu.com/p/cf46f7225db6)》。
+至此，通过u-boot加载kernel，并挂载SD卡文件系统已经成功；
+
+
+
+### 7. 总结
+
+SD卡中rootfs目录是一个简易的根文件系统，可以将它制作成一个镜像文件，将镜像文件烧写到开发板，或者通过Qemu中的u-boot启动Linux内核后挂载到镜像文件上。也可以设置为通过NFS网络文件系统启动，参考下一篇文章《[Qemu搭建ARM vexpress开发环境(三)----NFS网络根文件系统](https://www.jianshu.com/p/cf46f7225db6)》。
 
 
 

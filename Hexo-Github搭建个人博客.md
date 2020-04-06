@@ -1,16 +1,16 @@
-## Hexo-Github搭建个人博客
+---
+title: Hexo+Github搭建个人博客
+date: 2019-07-17 20:24:52
+tags: Hexo
+---
 
 
-
-### 目录
-
-[TOC]
 
 ### 1. 简介
 
 首次通过Hexo和Github搭建自己的博客，尝试成功，从别人那里借来个yilia主题，看着挺漂亮，索性直接当我的主题用了，虽然还不会太多的配置操作，先把自己搭建博客过程中的主要操作记录下来。
 
-
+<!--more-->
 
 #### 环境简介
 
@@ -28,18 +28,18 @@
 
 安装搭建博客需要的工具：git和node.js；通过一下命令查询：
 
-```
-$ git --version
+```shell
+# git --version
 git version 2.22.0.windows.1
 ```
 
-```
-$ node -v
+```shell
+# node -v
 v10.16.0
 ```
 
-```
-$ npm config set registry https://registry.npm.taobao.org
+```shell
+# npm config set registry https://registry.npm.taobao.org
 ```
 
 
@@ -48,7 +48,7 @@ $ npm config set registry https://registry.npm.taobao.org
 
 Hexo软件还未安装，下文会简单讲述Hexo软件的安装；
 
-[TOC]
+
 
 
 ### 2. Github仓库创建和配置
@@ -67,20 +67,20 @@ Initialize this repository with a README”；
 #### 2.2 配置git仓库
 
 如果是第一次使用git，就需要先配置git环境，否则可以跳过；
-```
-$ git config --global user.name "Mshrimp"
-$ git config --global user.email "******@outlook.com"
+```shell
+# git config --global user.name "Mshrimp"
+# git config --global user.email "******@outlook.com"
 ```
 
 在没有配置git环境之前，~/.ssh是不存在的
-```
-$ cd ~/.ssh
+```shell
+# cd ~/.ssh
 bash: cd: /c/Users/Kevin-TP/.ssh: No such file or directory
 ```
 
 使用ssh-keygen生成私钥和公钥
-```
-$ ssh-keygen -t rsa -C "chiyuan.ma@outlook.com"
+```shell
+# ssh-keygen -t rsa -C "chiyuan.ma@outlook.com"
 Generating public/private rsa key pair.
 Enter file in which to save the key (/c/Users/Kevin-TP/.ssh/id_rsa):
 Created directory '/c/Users/Kevin-TP/.ssh'.
@@ -109,11 +109,11 @@ Your identification has been saved in /c/Users/Kevin-TP/.ssh/id_rsa.
 Your public key has been saved in /c/Users/Kevin-TP/.ssh/id_rsa.pub.
 ```
 查看生成的密钥和公钥
-```
-$ cd ~/.ssh
-$ ls
+```shell
+# cd ~/.ssh
+# ls
 id_rsa  id_rsa.pub
-$ cat id_rsa.pub
+# cat id_rsa.pub
 ssh-rsa 
 ......
 ```
@@ -130,8 +130,8 @@ ssh-rsa
 
 
 使用“ssh -T git@github.com”命令，测试添加ssh是否成功；
-```
-$ ssh -T git@github.com
+```shell
+# ssh -T git@github.com
 ......
 Hi Mshrimp! You've successfully authenticated, but GitHub does not provide shell access.
 ```
@@ -152,8 +152,8 @@ Hi Mshrimp! You've successfully authenticated, but GitHub does not provide shell
 
 #### 4.1 安装hexo
 
-```
-$ npm install hexo -g
+```shell
+# npm install hexo -g
 
 C:\Users\Kevin-TP\AppData\Roaming\npm\hexo -> 
 C:\Users\Kevin-TP\AppData\Roaming\npm\node_modules\hexo\bin\hexo
@@ -174,8 +174,8 @@ and moved 5 packages in 19.178s
 ```
 
 检查hexo是否安装成功
-```
-$ hexo -v
+```shell
+# hexo -v
 hexo-cli: 2.0.0
 os: Windows_NT 10.0.18362 win32 x64
 http_parser: 2.8.0
@@ -195,10 +195,12 @@ cldr: 35.1
 tz: 2019a
 ```
 
+
+
 #### 4.2 初始化hexo文件夹
 
-```
-$ hexo init
+```shell
+# hexo init
 INFO  Cloning hexo-starter https://github.com/hexojs/hexo-starter.git
 Cloning into 'G:\hexo_git'...
 remote: Enumerating objects: 9, done.
@@ -230,13 +232,13 @@ INFO  Start blogging with Hexo!
 看到“Start blogging with Hexo！”打印，说明初始化完成；
 
 输入npm install，安装所需要的组件
-```
-$ npm install
+```shell
+# npm install
 ```
 
 hexo已经安装并初始化完成；
-```
-$ ls
+```shell
+# ls
 _config.yml  node_modules/  package.json  package-lock.json  scaffolds/  source/  themes/
 ```
 
@@ -244,9 +246,9 @@ _config.yml  node_modules/  package.json  package-lock.json  scaffolds/  source/
 
 #### 4.3 Hexo操作
 
-```
-$ hexo g #generate 生成静态文件
-$ hexo s #server 启动服务器。
+```shell
+# hexo g #generate 生成静态文件
+# hexo s #server 启动服务器。
 // 默认情况下，访问网址为： [http://localhost:4000/]
 ```
 在浏览器地址栏输入“http://localhost:4000/”打开页面，是一个空的博客网页；
@@ -271,8 +273,8 @@ deploy:
 
 
 HexoBlog部署到git，需要安装hexo-deployer-git插件，在blog目录下运行以下命令进行安装；
-```
-$ npm install hexo-deployer-git --save
+```shell
+# npm install hexo-deployer-git --save
 
 npm WARN babel-eslint@10.1.0 requires a peer of eslint@>= 4.12.1 but none is 
 installed. You must install peer dependencies yourself.
@@ -283,8 +285,8 @@ added 1 package from 1 contributor, removed 4 packages and updated 14 packages i
 ```
 
 修改根目录下_config.yml文件后，需要使用$ hexo deploy部署一下，否则修改内容不会生效；
-```
-$ hexo deploy
+```shell
+# hexo deploy
 ```
 
 
@@ -292,12 +294,12 @@ $ hexo deploy
 
 ### 5. 创建博客文章
 
+```shell
+# hexo new [layout] <title> #新建文章
 ```
-$ hexo new [layout] <title> #新建文章
-```
-```
+```shell
 // 创建博客：hello-world
-$ hexo new post hello-world
+# hexo new post hello-world
 INFO  Created: G:\hexo\source\_posts\hello-world.md
 ```
 创建成功后，会在source/_posts/目录生成hello-world.md文件； 
@@ -305,8 +307,8 @@ INFO  Created: G:\hexo\source\_posts\hello-world.md
 使用编辑器，编辑好hello-world.md文件的内容后，开始在博客中展示；
 
 生成静态文件
-```
-$ hexo g
+```shell
+# hexo g
 INFO  Start processing
 INFO  Files loaded in 757 ms
 INFO  Generated: archives/2019/index.html
@@ -330,32 +332,32 @@ INFO  Generated: mobile.992cbe.js
 INFO  18 files generated in 784 ms
 ```
 
-```
-$ ls
+```shell
+# ls
 _config.yml  node_modules/  package-lock.json  scaffolds/  themes/
 db.json      package.json   public/            source/
 ```
 
 启动服务器，通过浏览器打开http://localhost:4000查看博客文件效果
-```
-$ hexo s
+```shell
+# hexo s
 INFO  Start processing
 INFO  Hexo is running at http://localhost:4000 . Press Ctrl+C to stop.
 ```
 
 在确定博客文件完成之后，提交博客文件到git库保存
-```
-hexo d
+```shell
+# hexo d
 ```
 
 或者直接生成、提交一起操作
-```
-$ hexo g -d
+```shell
+# hexo g -d
 ```
 
 如果执行过程中出现异常，可以先清楚，再生成、提交
-```
-$ hexo clean
+```shell
+# hexo clean
 INFO  Deleted database.
 INFO  Deleted public folder.
 ```
@@ -389,7 +391,7 @@ hexo clean #clean 清除缓存文件 (db.json) 和已生成的静态文件 (publ
 
 不喜欢原来自带的主题，找了一个比较好看的yilia主题，需要先Github中将yilia主题的源码下载到博客目录的themes目录下；
 
-```
+```shell
 # git clone https://github.com/litten/hexo-theme-yilia.git themes/yilia
 ```
 

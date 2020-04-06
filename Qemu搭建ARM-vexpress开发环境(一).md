@@ -1,16 +1,12 @@
-# Qemu搭建ARM vexpress开发环境(一)
+---
+title: Qemu搭建ARM vexpress开发环境(一)
+date: 2019-08-10 21:37:50
+tags: Qemu
+---
 
 标签： Qemu
 
 ---
-
-
-
-## 目录
-
-[TOC]
-
-## 0. 简介
 
 嵌入式软件开发依赖于嵌入式硬件设备，比如：开发板、外部模块设备等，但是如果只是想学习、研究Linux内核，想学习Linux内核的架构，工作模式，需要修改一些代码，重新编译并烧写到开发板中进行验证，这样未必有些复杂，并且为此专门购买各种开发版，浪费资金，开会演示效果还需要携带一大串的板子和电线，不胜其烦。然而Qemu的使用可以避免频繁在开发板上烧写版本，如果进行的调试工作与外设无关，仅仅是内核方面的调试，Qemu模拟ARM开发环境完全可以完美地胜任。
 
@@ -56,14 +52,14 @@ arm-linux-gnueabi-gcc (Linaro 7.5.0-3)
 
 
 ## 2. 安装交叉编译工具
-```
+```shell
 # sudo apt install gcc-arm-linux-gnueabi
 ```
 
 查看安装是否成功：
 
-```
-$ arm-linux-gnueabi-gcc -v
+```shell
+# arm-linux-gnueabi-gcc -v
 Using built-in specs.
 COLLECT_GCC=arm-linux-gnueabi-gcc
 COLLECT_LTO_WRAPPER=/usr/lib/gcc-cross/arm-linux-gnueabi/7/lto-wrapper
@@ -82,7 +78,7 @@ gcc version 7.5.0 (Ubuntu/Linaro 7.5.0-3ubuntu1~18.04)
 
 
 ### 3.1 快速安装Qemu
-```
+```shell
 # sudo apt install qemu
 ```
 
@@ -98,7 +94,7 @@ gcc version 7.5.0 (Ubuntu/Linaro 7.5.0-3ubuntu1~18.04)
 
 1. 从Git服务器下载Qemu代码，记着在下载之前选择并切换需要的源码分支：
 
-```
+```shell
 # git clone git://git.qemu-project.org/qemu.git
 # cd qemu
 # git checkout -b stable-*** remotes/origin/stable-***
@@ -115,7 +111,7 @@ gcc version 7.5.0 (Ubuntu/Linaro 7.5.0-3ubuntu1~18.04)
 
 在配置qemu之前，需要安装一些依赖的库或者软件包：
 
-```
+```shell
 # sudo apt-get install zlib1g-dev 
 # sudo apt-get install libglib2.0-0
 # sudo apt-get install libglib2.0-dev
@@ -126,13 +122,13 @@ gcc version 7.5.0 (Ubuntu/Linaro 7.5.0-3ubuntu1~18.04)
 
 解压源代码：
 
-```
+```shell
 # tar -xvf qemu-4.2.0.tar.xz
 ```
 
 为了防止编译后文件比较乱，选择创建build目录作为编译中间目标路径：
 
-```
+```shell
 # cd qemu-4.2.0/
 # mkdir build
 # cd build/
@@ -142,7 +138,7 @@ gcc version 7.5.0 (Ubuntu/Linaro 7.5.0-3ubuntu1~18.04)
 
 配置、编译并安装Qemu：
 
-```
+```shell
 # ../configure --target-list=arm-softmmu --audio-drv-list=
 # make
 # make install
@@ -152,7 +148,7 @@ gcc version 7.5.0 (Ubuntu/Linaro 7.5.0-3ubuntu1~18.04)
 
 #### 3.2.3 在编译过程中可能出现的问题
 
-```
+```shell
 # ../configure --target-list=arm-softmmu --audio-drv-list=
 ERROR: pkg-config binary 'pkg-config' not found
 ```
@@ -161,7 +157,7 @@ ERROR: pkg-config binary 'pkg-config' not found
 
 
 
-```
+```shell
 # ../configure --target-list=arm-softmmu --audio-drv-list=
 ERROR: pixman >= 0.21.8 not present.
        Please install the pixman devel package.
@@ -169,7 +165,7 @@ ERROR: pixman >= 0.21.8 not present.
 
 可以通过apt-cache查询缺少的依赖库：
 
-```
+```shell
 # apt-cache search pixman
 libpixman-1-0 - pixel-manipulation library for X and cairo
 libpixman-1-dev - pixel-manipulation library for X and cairo (development files)
@@ -177,7 +173,7 @@ libpixman-1-dev - pixel-manipulation library for X and cairo (development files)
 
 安装缺少的依赖库：
 
-```
+```shell
 # sudo apt-get install libpixman-1-0
 # sudo apt-get install libpixman-1-dev
 ```
@@ -186,7 +182,7 @@ libpixman-1-dev - pixel-manipulation library for X and cairo (development files)
 
 ### 3.3 查看Qemu版本
 
-```
+```shell
 # qemu-system-arm --version
 QEMU emulator version 4.2.0
 Copyright (c) 2003-2019 Fabrice Bellard and the QEMU Project developers
@@ -197,7 +193,7 @@ Copyright (c) 2003-2019 Fabrice Bellard and the QEMU Project developers
 ### 3.4 查看Qemu支持的开发板
 
 Qemu工具支持大量开发板的虚拟，现存的大部分常用开发板都能很好地支持。通过下面的命令操作可以看到当前版本的Qemu工具支持的开发板列表：
-```
+```shell
 # qemu-system-arm -M help
 ......
 vexpress-a15         ARM Versatile Express for Cortex-A15
@@ -210,7 +206,7 @@ vexpress-a9          ARM Versatile Express for Cortex-A9
 ### 3.5 运行Qemu
 
 该操作目前还不能运行，因为还没有编译内核，如果手边有编译好的别的版本的zImage文件，可以通过下面命令尝试运行看下效果。
-```
+```shell
 # qemu-system-arm -M vexpress-a9 -m 512M -kernel ./zImage -dtb ./vexpress-v2p-ca9.dtb -nographic -append "console=ttyAMA0"
     -M          指定开发板
     -m          指定内存大小
@@ -222,7 +218,7 @@ vexpress-a9          ARM Versatile Express for Cortex-A9
 
 实例参考：
 
-```
+```shell
 # qemu-system-arm -M vexpress-a9 -m 512M -kernel ~/qemu/zImage -dtb ~/qemu/vexpress-v2p-ca9.dtb -nographic -append "console=ttyAMA0"
 -M vexpress-a9	模拟vexpress-a9板，可以使用-M ?参数来查询qemu支持的所有单板
 -m 512M	单板物理内存512M
@@ -246,7 +242,7 @@ vexpress-a9          ARM Versatile Express for Cortex-A9
 
 ### 4.2 解压Linux内核
 
-```
+```shell
 # tar -xvf linux-4.4.157.tar.xz
 ```
 
@@ -258,8 +254,8 @@ vexpress-a9          ARM Versatile Express for Cortex-A9
 
 #### 4.3.1 配置
 
-```
-$ make vexpress_defconfig ARCH=arm O=./object
+```shell
+# make vexpress_defconfig ARCH=arm O=./object
 make[1]: Entering directory '/home/xiami/tool/linux-4.14.172/object'
   HOSTCC  scripts/basic/fixdep
   GEN     ./Makefile
@@ -276,35 +272,35 @@ make[1]: Leaving directory '/home/xiami/tool/linux-4.14.172/object'
 
 
 
-```
-$ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- menuconfig -j4 O=./object
+```shell
+# make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- menuconfig -j4 O=./object
 ```
 
 
 
 #### 4.3.2 编译
 
-```
-$ make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 O=./object
+```shell
+# make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 O=./object
 ```
 
 或者在Makefile中配置默认值，指定ARCH和CROSS_COMPILE，免得每次编译都需要带参数；
 
-```
+```shell
 # make vexpress_defconfig
 # make zImage -j4
 # make modules -j4    // 编译驱动模块
 # make dtbs		// 编译设备树
 ```
 得到编译文件：
-```
+```shell
 arch/arm/boot/zImage
 arch/arm/boot/dts/vexpress-v2p-ca9.dtb
 ```
 
 分别将编译生成的zImage和vexpress-v2p-ca9.dtb文件放到~/qemu目录；
 
-```
+```shell
 # cp arch/arm/boot/zImage ~/qemu
 # cp arch/arm/boot/dts/vexpress-v2p-ca9.dtb ~/qemu
 ```
@@ -313,11 +309,11 @@ arch/arm/boot/dts/vexpress-v2p-ca9.dtb
 
 ### 4.4 Qemu启动命令
 
-```
+```shell
 # qemu-system-arm -M vexpress-a9 -m 512M -kernel kernel/linux-4.4.157/arch/arm/boot/zImage -dtb kernel/linux-4.4.157/arch/arm/boot/dts/vexpress-v2p-ca9.dtb -nographic -append "console=ttyAMA0"
 ```
 Qemu的启动命令需要带好几个参数，完成启动命令比较长，每次都输入很可能会出现错误，为了使用方便，可以将该命令放到shell脚本中执行：
-```
+```shell
 # cat boot.sh
 #! /bin/sh
 qemu-system-arm \
@@ -411,7 +407,7 @@ Hardware name: ARM-Versatile Express
 
 ### 5.2 解压busybox
 
-```
+```shell
 # tar -xvf busybox-1.31.1.tar.bz2
 ```
 
@@ -423,7 +419,7 @@ Hardware name: ARM-Versatile Express
 
 #### 5.3.1 配置
 
-```
+```shell
 # make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- menuconfig
 ```
 
@@ -431,7 +427,7 @@ Hardware name: ARM-Versatile Express
 
 编译选择使用glibc动态库，因为静态库可能会出现一些未知的问题
 
-```
+```shell
 # make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- menuconfig
 Settings  --->
     Build Options  --->
@@ -442,7 +438,7 @@ Settings  --->
 
 默认的安装目录是./_install，如果需要指定安装目录，可以在下边修改：
 
-```
+```shell
 Settings  --->
 Installation Options ("make install" behavior)
 (./_install) Destination path for 'make install'
@@ -452,7 +448,7 @@ Installation Options ("make install" behavior)
 
 #### 5.3.2 编译
 
-```
+```shell
 # make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi-
 ```
 
@@ -460,13 +456,13 @@ Installation Options ("make install" behavior)
 
 #### 5.3.3 安装
 
-```
+```shell
 # make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- install
 ```
 
 提示下边信息，表示安装成功：
 
-```
+```shell
 --------------------------------------------------
 You will probably need to make your busybox binary
 setuid root to ensure all configured applets will
@@ -476,7 +472,7 @@ work properly.
 
 安装完成之后，生成的目标文件默认在./_install目录，这个目标文件目录就是下边要制作根文件系统需要用到的工具：
 
-```
+```shell
 $ ls _install/
 bin  linuxrc  sbin  usr
 ```
@@ -485,7 +481,7 @@ bin  linuxrc  sbin  usr
 
 或者直接使用CONFIG_PREFIX指定安装目录：
 
-```
+```shell
 # make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- CONFIG_PREFIX=/.../rootfs/ install
 ```
 
@@ -497,13 +493,13 @@ bin  linuxrc  sbin  usr
 
 修改Makefile:
 
-```
+```shell
 # vim Makefile
 ARCH = arm
 CROSS_COMPILE = arm-linux-gnueabi-
 ```
 之后的编译、安装命令就简单了：
-```
+```shell
 # make
 # make install
 ```
@@ -519,12 +515,12 @@ CROSS_COMPILE = arm-linux-gnueabi-
 #### 1) 编译并安装busybox
 
 将busybox编译生成的_install目录下的文件全部拷贝到根文件系统目标rootfs/目录：
-```
+```shell
 # mkdir rootfs
 # cp /.../busybox-1.29.3/_install/* rootfs/ -rfd
 ```
 也可以在指定busybox的安装目录直接安装：
-```
+```shell
 # make CONFIG_PREFIX=/.../rootfs/ install
 ```
 
@@ -533,7 +529,7 @@ CROSS_COMPILE = arm-linux-gnueabi-
 #### 2) 添加glibc库
 
 在根文件系统中添加加载器和动态库：
-```
+```shell
 # mkdir rootfs/lib
 # cp /usr/arm-linux-gnueabi/lib/* rootfs/lib/ -rfp
 ```
@@ -542,7 +538,7 @@ CROSS_COMPILE = arm-linux-gnueabi-
 
 #### 3) 静态创建设备文件
 
-```
+```shell
 # mkdir rootfs/dev
 # cd rootfs/dev
 # mknod -m 666 tty1 c 4 1
@@ -562,7 +558,7 @@ CROSS_COMPILE = arm-linux-gnueabi-
 
 #### 1) 生成一个空的SD卡镜像：
 
-```
+```shell
 # dd if=/dev/zero of=rootfs.ext3 bs=1M count=32
 32+0 records in
 32+0 records out
@@ -573,7 +569,7 @@ CROSS_COMPILE = arm-linux-gnueabi-
 
 #### 2) 将SD卡格式化为exts文件系统：
 
-```
+```shell
 # mkfs.ext3 rootfs.ext3
 mke2fs 1.42.13 (17-May-2015)
 Discarding device blocks: done                            
@@ -620,7 +616,7 @@ Writing superblocks and filesystem accounting information: done
 
 ### 1) Qemu启动命令：
 
-```
+```shell
 # qemu-system-arm -M vexpress-a9 -m 512M -kernel ~/qemu/zImage -dtb ~/qemu/vexpress-v2p-ca9.dtb -nographic -append "root=/dev/mmcblk0 rw console=ttyAMA0" -sd rootfs.ext3
 ```
 
@@ -628,7 +624,7 @@ Writing superblocks and filesystem accounting information: done
 
 ### 2) 启动脚本：
 
-```
+```shell
 # boot.sh
 #! /bin/sh
 qemu-system-arm \
@@ -647,7 +643,7 @@ qemu-system-arm \
 
 ### 3) 图形化启动内核：
 
-```
+```shell
 qemu-system-arm -M vexpress-a9 -m 512M -kernel ~/qemu/zImage -dtb ~/qemu/vexpress-v2p-ca9.dtb -append "root=/dev/mmcblk0 rw console=tty0" -sd rootfs.ext3
 ```
 
@@ -676,20 +672,20 @@ QEMU: Terminated
 
 如上问题是由于编译生成的busybox工具，是x86环境下使用的：
 
-```
+```shell
 # file bin/busybox 
 bin/busybox: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/l, for GNU/Linux 3.2.0, BuildID[sha1]=7fe433943e201f5337be6116a883d54fc1a4a349, stripped
 ```
 
 是因为在安装busybox的时候，使用了make install，应该使用
 
-```
+```shell
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- install
 ```
 
 编译工具生成arm平台使用的busybox工具：
 
-```
+```shell
 # file rootfs/bin/busybox
 rootfs/bin/busybox: ELF 32-bit LSB executable, ARM, EABI5 version 1 (SYSV), dynamically linked, interpreter /lib/ld-, for GNU/Linux 3.2.0, BuildID[sha1]=cbcd33b8d6c946cb19408a5e8e714de554c87f52, stripped
 ```
@@ -719,7 +715,7 @@ Linux (none) 4.4.157 #1 SMP Sun Sep 23 21:11:22 CST 2018 armv7l GNU/Linux
 至此，Qemu启动Linux内核并挂载跟文件系统已经启动成功，通过串口终端可以正常和系统进行简单功能的交互。
 打印中提示的不能运行/etc/init.d/rcS问题，只需要添加/etc/init.d/rcS文件即可，文件内容可以是提示语句。
 
-```
+```shell
 # cat /etc/init.d/rcS
 Hello Qemu Linux!
 ```
@@ -760,14 +756,14 @@ QEMU: Terminated
 
 有时候会发现无法通过shutdown等工具关闭，因为Qemu也是一个进程，可以通过杀掉Qemu进程的方法关闭Qemu模拟环境。
 
-```
+```shell
 # ps -a
 # kill xxx
 ```
 
 如下可以采用脚本运行：
 
-```
+```shell
 # cat kill_qemu.sh 
 #! /bin/sh
 ps -a | grep qemu-system-arm | awk '{print $1}' | xargs sudo kill -9
