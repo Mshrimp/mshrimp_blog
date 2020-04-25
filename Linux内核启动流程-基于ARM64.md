@@ -6,11 +6,9 @@ tags: Kernel
 
 
 
+以arm64为例，简单讲述Linux在ARM64架构设备上系统启动的重要流程；
 
 
-## Linux内核启动流程-基于ARM64
-
-以Lx2160芯片为例，讲述Linux在ARM64架构设备上的系统启动流程；Lx2160芯片是NXP的64位ARM处理器；
 
 <!--more-->
 
@@ -25,10 +23,10 @@ tags: Kernel
 ### 0. 简述
 
 
-以Lx2160芯片为例，讲述Linux在ARM64架构设备上的系统启动流程；Lx2160芯片是NXP的64位ARM处理器；
+以arm64为例，讲述Linux在ARM64架构设备上的系统启动流程；
 
 
-上电启动，系统启动要经过uboot、vboot、kernel、filesystem、ADM几个过程，如下：
+上电启动，系统启动要经过uboot、kernel、filesystem、ADM几个过程，如下：
 
 
 ```mermaid
@@ -58,9 +56,9 @@ Linux内核版本：
 
 
 ```shell
-linux-4.9.115-cgel
+linux-4.9.115
 # uname -a
-Linux zte 4.9.115-rt93-EMBSYS-CGEL-6.1.R5 #2 SMP PREEMPT Thu Dec 12 14:37:15 CST 2019 aarch64 GNU/Linux
+Linux vexpress 4.9.115 #2 SMP Wed Apr 1 22:49:35 CST 2020 aarch64 GNU/Linux
 ```
 
 **说明**：由于Linux内核系统庞大繁杂，要想把内核启动中的每个细节都描述清楚，基本上不可能，更何况作者能力水平也达不到；因此，就在追踪内核启动流程代码的同时，只描述比较重要的几个部分；可以在以后的工作、学习中，随着水平的提高，不断地增加内容；
@@ -93,7 +91,7 @@ arch/arm64/kernel/vmlinux.lds.S
 
 
 ```shell
-bsp/tmp/bsp/DBG/BOARDLX2160LE/ARMQORIQLE/kernel/kernels/linux-4.9.115-cgel/arch/arm64/kernel/vmlinux.lds
+arch/arm64/kernel/vmlinux.lds
 ```
 
 
@@ -174,10 +172,7 @@ Linux内核从3.x版本开始引入设备树的概念，用于实现驱动代码
 一般情况下，在编译设备树之前，先在scripts/dtc/目录下，编译生成dtc工具scripts/dtc/dtc，再使用生成的dtc工具编译设备树源码，生成设备树文件；设备树源码和目标文件在arch/arm64/boot/dts/freescale/目录；
 
 
-但是在Lx2160板的项目中，设备树文件是在vboot中编译生成，并和uboot、vboot打包在一起的，这部分将在uboot、vboot启动中再进行描述；
-
-
-在Lx2160板项目中，目标文件会被重定向输出到tmp/bsp/DBG/BOARDLX2160LE/ARMQORIQLE/kernel/kernels/linux-4.9.115-cgel/
+在Lx2160板项目中，目标文件会被重定向输出到target目录；
 
 
 
@@ -243,7 +238,7 @@ Lx2160le板的交叉编译工具链：
 
 
 ```shell
-CROSS_COMPILE=/opt/zte/20180105//aarch64_eabi_gcc6.2.0_glibc2.24.0_fp/bin/aarch64-linux-gnu-
+CROSS_COMPILE=aarch64-linux-gnu-
 ```
 
 
@@ -256,7 +251,6 @@ CROSS_COMPILE=/opt/zte/20180105//aarch64_eabi_gcc6.2.0_glibc2.24.0_fp/bin/aarch6
 
 
 ```shell
-# cd /home/machiyuan/bsp/bsp/bin/bsp/DBG/BOARDLX2160LE/ARMQORIQLE
 # readelf -h vmlinux
 ELF Header:
   Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
@@ -287,7 +281,7 @@ ELF Header:
 
 
 ```shell
-# /opt/zte/20180105//aarch64_eabi_gcc6.2.0_glibc2.24.0_fp/bin/aarch64-linux-gnu-objdump -dxh vmlinux > vmlinux.s
+# aarch64-linux-gnu-objdump -dxh vmlinux > vmlinux.s
 ```
 
 
@@ -671,7 +665,7 @@ const char linux_banner[] =
 
 
 ```shell
-Linux version 4.9.115-rt93-EMBSYS-CGEL-6.1.R5 (root@localhost.localdomain) (gcc version 6.2.0 20170314 ZTE Embsys-TSP V3.06.40 (GCC) ) #2 SMP PREEMPT Tue Mar 10 11:21:00 CST 2020
+Linux version 4.9.115 (root@localhost.localdomain) (gcc version 6.2.0 20170314 ZTE Embsys-TSP V3.06.40 (GCC) ) #2 SMP PREEMPT Tue Mar 10 11:21:00 CST 2020
 ```
 
 

@@ -8,11 +8,9 @@ tags: i2c
 
 
 
-## 	Linux kernel中的I2C子系统
+Linux系统定义了I2C驱动体系结构，在Linux内核中的I2C子系统中，I2C驱动共有3部分组成：I2C核心、I2C总线驱动、I2C设备驱动，这三部分组成了I2C的框架；I2C子系统中有4个重要内容：I2C总线、I2C设备、I2C驱动、I2C适配器；
 
 
-
-Linux内核中的I2C子系统中，有4个重要内容：I2C总线、I2C设备、I2C驱动、I2C适配器；
 
 <!--more-->
 
@@ -64,6 +62,8 @@ i2c_new_device		// 注册client
 
 
 
+
+
 Linux的I2C体系结构分为3个部分：
 
 > I2C核心
@@ -71,6 +71,10 @@ Linux的I2C体系结构分为3个部分：
 > I2C总线驱动
 >
 > I2C设备驱动
+
+
+
+![Linux的I2C子系统框架](Linux-kernel中的I2C子系统/Linux的I2C子系统框架.png)
 
 
 
@@ -454,6 +458,16 @@ struct i2c_driver       I2C（从机）设备驱动信息
 
 
 ![I2C总线层和设备层的关系](Linux-kernel中的I2C子系统/I2C总线层和设备层的关系.png)
+
+
+
+
+
+#### 2.4 数据结构间的关系
+
+
+
+![I2C数据结构间的关系](Linux-kernel中的I2C子系统/I2C数据结构间的关系.png)
 
 
 
@@ -1208,7 +1222,7 @@ EXPORT_SYMBOL(__i2c_transfer);
 
 经过mster_xfer()函数发送、接收的消息类型应该按照struct i2c_msg结构体格式：
 
-```
+```c
 // include/uapi/linux/i2c.h
 struct i2c_msg {
     __u16 addr; /* slave address            */
@@ -1513,87 +1527,181 @@ static void i2c_scan_static_board_info(struct i2c_adapter *adapter)
 
 ### 5. 添加驱动
 
+以eeprom为例；
 
+
+
+
+
+#### 5.1 I2C设备驱动框架
+
+```c
+static int mcy_eeprom_init(void)
+{
+    printk("%s\n", __func__);
+
+    i2c_add_driver(&mcy_eeprom_driver);
+
+    return 0;
+}
+
+static void mcy_eeprom_exit(void)
+{
+    printk("%s\n", __func__);
+
+    i2c_del_driver(&mcy_eeprom_driver);
+}
+
+module_init(mcy_eeprom_init);
+module_exit(mcy_eeprom_exit);
+```
 
 
 
 ```c
-#include <linux/module.h>
-#include <linux/cdev.h>
-#include <linux/fs.h>
-#include <linux/slab.h>
-#include <linux/i2c.h>
-#include <asm-generic/uaccess.h>
+struct i2c_driver mcy_eeprom_driver = {
+    .driver = {
+        .owner = THIS_MODULE,
+        .name = "mcy_eeprom",
+        //.of_match_table = mcy_eeprom_table,
+    },
+    .probe = mcy_eeprom_probe,
+    .remove = mcy_eeprom_remove,
+    .id_table = mcy_eeprom_id,
+};
+```
 
 
-typedef struct eeprom_data_s {
-    int reg;
-    int len;
-    unsigned char data[16];
-} eeprom_data_t;
 
-typedef struct eeprom_driver_s {
-    dev_t devnum;
-    struct cdev *cdev;
-    struct class *class;
-    struct device *dev;
-    struct i2c_client *client;
-} eeprom_driver_t;
 
-eeprom_data_t eeprom_data;
-eeprom_driver_t eeprom_driver;
 
-static int eeprom_driver_open(struct inode *inode, struct file *filp)
+
+
+```mermaid
+graph TB
+	eeprom_init(eeprom_init)-->
+	i2c_add_driver(i2c_add_driver)-->eeprom_driver(eeprom_driver)
+	eeprom_driver-->driver(driver)
+	eeprom_driver-->probe(probe)
+	eeprom_driver-->remove(remove)
+	eeprom_driver-->id_table(id_table)
+```
+
+
+
+#### 5.2 probe函数
+
+##### 1）注册字符设备
+
+```c
+int mcy_eeprom_probe(struct i2c_client *client, const struct i2c_device_id *id)
+{
+    int ret = -1; 
+
+    printk("%s\n", __func__);
+    
+    eeprom_driver.client = client;
+
+    ret = alloc_chrdev_region(&devnum, 0, 1, "mcy_eeprom_chrdev");
+    if (ret) {
+        printk("%s, alloc_chrdev_region failed!\n", __func__);
+        goto chrdev_err;
+    }   
+    printk("%s, alloc_chrdev_region, devnum: %d\n", __func__, devnum);
+
+    cdev = cdev_alloc();
+    cdev_init(cdev, &mcy_eeprom_fops);
+    ret = cdev_add(cdev, devnum, 1); 
+    if (ret) {
+        printk("%s, cdev_add failed!\n", __func__);
+        goto cdev_err;
+    }
+        
+    // /sys/class
+    dev_class = class_create(THIS_MODULE, "mcy_eeprom_class");
+    if (IS_ERR(dev_class)) {
+        printk("%s, dev_class class_create failed\n", __func__);
+        goto class_err;
+    }   
+    // /dev
+    device_create(dev_class, NULL, devnum, NULL, "mcy_eeprom0");
+
+    printk("%s, OK!\n", __func__);
+
+    return 0;
+
+class_err:
+    cdev_del(cdev);
+cdev_err:
+    unregister_chrdev_region(devnum, 1); 
+chrdev_err:
+    return -1; 
+}
+```
+
+
+
+##### 2）卸载函数
+
+```c
+int mcy_eeprom_remove(struct i2c_client *client)
 {
     printk("%s\n", __func__);
 
-    return 0;
-}
-
-static int eeprom_driver_release(struct inode *inode, struct file *filp)
-{
-    printk("%s\n", __func__);
-
-    return 0;
-}
-
-static ssize_t eeprom_driver_read(struct file *filp, char __user *buf, size_t count, loff_t *loff)
-{
-    eeprom_data_t eeprom_data;
-    unsigned char reg[2] = {0};
-    int i = 0;
-    int ret = -1;
-
-    printk("%s\n", __func__);
-
-    memset(&eeprom_data, 0, sizeof(eeprom_data_t));
-    ret = copy_from_user(&eeprom_data, buf, count);
-    if (ret < 0) {
-        printk("%s, copy_from_user failed, ret: %d\n", __func__, ret);
-        return -1;
-    }
-
-    reg[0] = (char)((eeprom_data.reg & 0x0000ff00) >> 8);
-    reg[1] = (char)(eeprom_data.reg & 0x000000ff);
-
-    ret = i2c_master_send(eeprom_driver.client, reg, 2);
-    ret = i2c_master_recv(eeprom_driver.client, eeprom_data.data, eeprom_data.len);
-
-    for (i = 0; i < eeprom_data.len; i++) {
-        printk("%s, i2c_master_recv, reg[%d]: 0x%x, data: 0x%2x\n", __func__, i, eeprom_data.reg + i, eeprom_data.data[i]);
-    }
-
-    ret = copy_to_user(buf, &eeprom_data, count);
-    if (ret < 0) {
-        printk("%s, copy_to_user failed, ret: %d\n", __func__, ret);
-        return -1;
-    }
+    device_destroy(dev_class, devnum);
+    class_destroy(dev_class);
+    cdev_del(cdev);
+    unregister_chrdev_region(devnum, 1);
+    kfree(cdev);
 
     return 0;
 }
+```
 
+
+
+##### 3）字符设备操作集
+
+```c
+struct file_operations mcy_eeprom_fops= {
+    .open = eeprom_driver_open,
+    .release = eeprom_driver_release,
+    .read = eeprom_driver_read,
+    .write = eeprom_driver_write,
+};
+```
+
+
+
+#### 5.3 读写函数
+
+
+
+I2C数据的发送和接收，是通过I2C驱动中file_operations的write和read系统调用来实现的；驱动中read和write的封装，是需要封装调用i2c_transfer()函数来完成i2d_msg消息的通信；read和write函数的封装，有两种方法；
+
+
+
+##### 5.3.1 内核函数调用
+
+使用i2c-core.c提供的i2c_master_send()和i2c_master_recv()函数实现I2C信息的发送和接收；
+
+
+
+###### 1）发送
+
+```c
+i2c_master_send(client, data, len);
+```
+
+I2C发送，直接调用i2c_master_send()函数，一次完成I2C数据的发送；
+
+data：要发送的数据信息数组；其中data最前边的地址存放的是I2C从设备寄存器的地址，如果地址是8bits，就占用data[0]，如果地址是16bits，占用data[0]和data[1]；在地址之后，紧接着存放要发送的数据内容；
+
+len：要发送的数据长度；包含I2C从设备寄存器地址和数据内容的总数据长度；
+
+```c
 static ssize_t eeprom_driver_write(struct file *filp, const char __user *buf, size_t count, loff_t *loff)
-{
+{   
     eeprom_data_t eeprom_data;
     unsigned char data[18] = {0};
     int len = 0;
@@ -1617,161 +1725,196 @@ static ssize_t eeprom_driver_write(struct file *filp, const char __user *buf, si
     for (i = 0; i < len; i++) {
         printk("%s, data[%d]: 0x%2x\n", __func__, i, data[i]);
     }
-
+#if 1
     ret = i2c_master_send(eeprom_driver.client, data, len);
-
+#else
+    
+#endif
     return 0;
 }
-
-struct file_operations eeprom_driver_fops = {
-    .open = eeprom_driver_open,
-    .release = eeprom_driver_release,
-    .read = eeprom_driver_read,
-    .write = eeprom_driver_write,
-};
-
-int eeprom_driver_probe(struct i2c_client *client, const struct i2c_device_id *id)
-{
-    int major = 0;
-    int ret = -1;
-
-    printk("%s\n", __func__);
-
-    eeprom_driver.client = client;
-
-    ret = alloc_chrdev_region(&eeprom_driver.devnum, 0, 1, "eeprom_driver_chrdev");
-    if (ret < 0) {
-        printk("%s, alloc_chrdev_region failed!\n", __func__);
-        goto chrdev_err;
-    }
-    major = MAJOR(eeprom_driver.devnum);
-    printk("%s, alloc_chrdev_region, devnum: 0x%x, major: %d\n", __func__, eeprom_driver.devnum, major);
-
-    eeprom_driver.cdev = cdev_alloc();
-    if (!eeprom_driver.cdev) {
-        printk("%s, cdev_alloc failed!\n", __func__);
-        goto cdev_alloc_err;
-    }
-    cdev_init(eeprom_driver.cdev, &eeprom_driver_fops);
-    ret = cdev_add(eeprom_driver.cdev, eeprom_driver.devnum, 1);
-    if (ret < 0) {
-        printk("%s, cdev_add failed!\n", __func__);
-        goto cdev_add_err;
-    }
-
-    // /sys/class
-    eeprom_driver.class = class_create(THIS_MODULE, "eeprom_driver_class");
-    if (IS_ERR(eeprom_driver.class)) {
-        printk("%s, class_create failed!\n", __func__);
-        ret = PTR_ERR(eeprom_driver.class);
-        goto class_create_err;
-    }
-    // /dev
-    eeprom_driver.dev = device_create(eeprom_driver.class, NULL, eeprom_driver.devnum, NULL, "eeprom_driver");
-    if (IS_ERR(eeprom_driver.dev)) {
-        printk("%s, device_create failed!\n", __func__);
-        ret = PTR_ERR(eeprom_driver.dev);
-        goto device_create_err;
-    }
-
-    printk("%s, OK!\n", __func__);
-
-    return 0;
-
-device_create_err:
-    class_destroy(eeprom_driver.class);
-class_create_err:
-    cdev_del(eeprom_driver.cdev);
-cdev_add_err:
-    kfree(eeprom_driver.cdev);
-cdev_alloc_err:
-    unregister_chrdev_region(eeprom_driver.devnum, 1);
-chrdev_err:
-    return -EINVAL;
-}
-
-int eeprom_driver_remove(struct i2c_client *client)
-{
-    printk("%s\n", __func__);
-
-    device_destroy(eeprom_driver.class, eeprom_driver.devnum);
-    class_destroy(eeprom_driver.class);
-
-    cdev_del(eeprom_driver.cdev);
-
-    kfree(eeprom_driver.cdev);
-    unregister_chrdev_region(eeprom_driver.devnum, 1);
-
-    return 0;
-}
-
-struct i2c_device_id eeprom_driver_id[] = {
-    {"mcy_eeprom", 0},
-    {},
-};
-
-struct of_device_id eeprom_driver_table[] = {
-    {
-        //.name = "mcy_eeprom",
-        .compatible = "mcy,mcy_eeprom",
-    },
-    {},
-};
-
-struct i2c_driver eeprom_i2c_driver= {
-    .driver = {
-        .owner = THIS_MODULE,
-        .name = "mcy_eeprom",
-        //.of_match_table = eeprom_driver_table,
-    },
-    .probe = eeprom_driver_probe,
-    .remove = eeprom_driver_remove,
-    .id_table = eeprom_driver_id,
-};
-
-static int eeprom_driver_init(void)
-{
-    printk("%s\n", __func__);
-
-    i2c_add_driver(&eeprom_i2c_driver);
-
-    return 0;
-}
-
-static void eeprom_driver_exit(void)
-{
-    printk("%s\n", __func__);
-
-    i2c_del_driver(&eeprom_i2c_driver);
-}
-
-module_init(eeprom_driver_init);
-module_exit(eeprom_driver_exit);
 ```
 
 
 
+###### 2）接收
+
+```c
+i2c_master_send(client, reg, reg_len); 
+i2c_master_recv(client, data, data_len);
+```
+
+I2C接收不同于发送，需要两步来完成，先使用i2c_master_send()函数向I2C从设备发送要读取的寄存器地址；再使用i2c_master_recv()函数，从I2C从设备指定寄存器地址读取数据；
+
+reg：要读取的从设备寄存器地址数组；如果地址是8bits，reg_len为1；如果地址是16bits，reg_len为2；
+
+data：要读取的数据信息存放的指针地址；data_len为要读取的寄存器个数；
+
+###### 
+
+```c
+static ssize_t eeprom_driver_read(struct file *filp, char __user *buf, size_t count, loff_t *loff)
+{
+    eeprom_data_t eeprom_data;
+    unsigned char reg[2] = {0};
+    int i = 0;
+    int ret = -1; 
+
+    printk("%s\n", __func__);
+
+    memset(&eeprom_data, 0, sizeof(eeprom_data_t));
+    ret = copy_from_user(&eeprom_data, buf, count);
+    if (ret < 0) {
+        printk("%s, copy_from_user failed, ret: %d\n", __func__, ret);
+        return -1; 
+    }
+
+    reg[0] = (char)((eeprom_data.reg & 0x0000ff00) >> 8); 
+    reg[1] = (char)(eeprom_data.reg & 0x000000ff);
+
+#if 1
+    ret = i2c_master_send(eeprom_driver.client, reg, 2); 
+    ret = i2c_master_recv(eeprom_driver.client, eeprom_data.data, eeprom_data.len);
+#else
+    
+#endif
+
+    for (i = 0; i < eeprom_data.len; i++) {
+        printk("%s, i2c_master_recv, reg[%d]: 0x%x, data: 0x%2x\n", __func__, i, eeprom_data.reg + i, eeprom_data.data[i]);
+    }   
+
+    ret = copy_to_user(buf, &eeprom_data, count);
+    if (ret < 0) {
+        printk("%s, copy_to_user failed, ret: %d\n", __func__, ret);
+        return -1; 
+    }   
+
+    return 0;
+}
+```
 
 
 
+##### 5.3.2 直接封装
+
+直接通过封装i2c_msg消息，通过i2c_transfer()函数实现I2C信息的发送和接收；
+
+###### 1）发送
+
+```c
+int i2c_send_bytes(const struct i2c_client *client, unsigned short reg, const char *buf, int count)
+{
+    unsigned char *data = NULL;
+    struct i2c_msg msg;
+    int len = 0;
+    int ret = -1;
+
+    data = kmalloc(count + 2, GFP_KERNEL);
+    if (!data) {
+        printk("%s, kmalloc failed!\n", __func__);
+        return -1;
+    }
+    data[0] = (char)((reg & 0x0000ff00) >> 8);
+    data[1] = (char)(reg & 0x000000ff);
+    memcpy(&data[2], buf, count);
+    len = count + 2;
+
+    memset(&msg, 0, sizeof(msg));
+    msg.addr = client->addr;
+    msg.flags = 0;
+    msg.len = count;
+    msg.buf = data;
+
+    ret = i2c_transfer(client->adapter, &msg, 1);
+
+    if (data) {
+        kfree(data);
+        data = NULL;
+    }
+
+    return ret;
+}
+```
 
 
 
+```c
+static ssize_t eeprom_driver_write(struct file *filp, const char __user *buf, size_t count, loff_t *loff)
+{
+    eeprom_data_t eeprom_data;
+    int i = 0;
+    int ret = -1;
+
+    memset(&eeprom_data, 0, sizeof(eeprom_data_t));
+    ret = copy_from_user(&eeprom_data, buf, count);
+    if (ret < 0) {
+        printk("%s, copy_from_user failed, ret: %d\n", __func__, ret);
+        return -1;
+    }
+
+    ret = i2c_send_bytes(eeprom_driver.client, eeprom_data.reg, eeprom_data.data, eeprom_data.len);
+
+    return 0;
+}
+```
 
 
 
+###### 2）接收
+
+```c
+int i2c_recv_bytes(const struct i2c_client *client, unsigned short reg, unsigned char *buf, int count)
+{
+    struct i2c_msg msg[2] = { 0 };
+    unsigned char txbuf[2] = { 0 };
+    int ret = -1;
+
+    txbuf[0] = (char)((reg & 0x0000ff00) >> 8);
+    txbuf[1] = (char)(reg & 0x000000ff);
+
+    memset(&msg, 0, sizeof(msg));
+    msg[0].addr = client->addr;
+    msg[0].flags = 0;
+    msg[0].len = 2;
+    msg[0].buf = txbuf;
+
+    msg[1].addr = client->addr;
+    msg[1].flags = I2C_M_RD;
+    msg[1].len = count;
+    msg[1].buf = buf;
+
+    ret = i2c_transfer(client->adapter, msg, 2);
+
+    return ret;
+}
+```
 
 
 
+```c
+static ssize_t eeprom_driver_read(struct file *filp, char __user *buf, size_t count, loff_t *loff)
+{
+    eeprom_data_t eeprom_data;
+    int i = 0;
+    int ret = -1;
 
+    memset(&eeprom_data, 0, sizeof(eeprom_data_t));
+    ret = copy_from_user(&eeprom_data, buf, count);
+    if (ret < 0) {
+        printk("%s, copy_from_user failed, ret: %d\n", __func__, ret);
+        return -1;
+    }
 
+    ret = i2c_recv_bytes(eeprom_driver.client, eeprom_data.reg, eeprom_data.data, eeprom_data.len);
 
+    ret = copy_to_user(buf, &eeprom_data, count);
+    if (ret < 0) {
+        printk("%s, copy_to_user failed, ret: %d\n", __func__, ret);
+        return -1;
+    }
 
-
-
-
-
-
+    return 0;
+}
+```
 
 
 
@@ -2194,240 +2337,7 @@ module_exit(eeprom_device_exit);
 
 #### 7.2 添加驱动
 
-以eeprom为例；
-
-
-
-
-
-##### 7.2.1 I2C设备驱动框架
-
-```c
-static int mcy_eeprom_init(void)
-{
-    printk("%s\n", __func__);
-
-    i2c_add_driver(&mcy_eeprom_driver);
-
-    return 0;
-}
-
-static void mcy_eeprom_exit(void)
-{
-    printk("%s\n", __func__);
-
-    i2c_del_driver(&mcy_eeprom_driver);
-}
-
-module_init(mcy_eeprom_init);
-module_exit(mcy_eeprom_exit);
-```
-
-
-
-```c
-struct i2c_driver mcy_eeprom_driver = {
-    .driver = {
-        .owner = THIS_MODULE,
-        .name = "mcy_eeprom",
-        //.of_match_table = mcy_eeprom_table,
-    },
-    .probe = mcy_eeprom_probe,
-    .remove = mcy_eeprom_remove,
-    .id_table = mcy_eeprom_id,
-};
-```
-
-
-
-
-
-
-
-```mermaid
-graph TB
-	eeprom_init(eeprom_init)-->
-	i2c_add_driver(i2c_add_driver)-->eeprom_driver(eeprom_driver)
-	eeprom_driver-->driver(driver)
-	eeprom_driver-->probe(probe)
-	eeprom_driver-->remove(remove)
-	eeprom_driver-->id_table(id_table)
-```
-
-
-
-##### 7.2.2 probe函数
-
-注册字符设备
-
-```c
-int mcy_eeprom_probe(struct i2c_client *client, const struct i2c_device_id *id)
-{
-    int ret = -1; 
-
-    printk("%s\n", __func__);
-
-    ret = alloc_chrdev_region(&devnum, 0, 1, "mcy_eeprom_chrdev");
-    if (ret) {
-        printk("%s, alloc_chrdev_region failed!\n", __func__);
-        goto chrdev_err;
-    }   
-    printk("%s, alloc_chrdev_region, devnum: %d\n", __func__, devnum);
-
-    cdev = cdev_alloc();
-    cdev_init(cdev, &mcy_eeprom_fops);
-    ret = cdev_add(cdev, devnum, 1); 
-    if (ret) {
-        printk("%s, cdev_add failed!\n", __func__);
-        goto cdev_err;
-    }
-        
-    // /sys/class
-    dev_class = class_create(THIS_MODULE, "mcy_eeprom_class");
-    if (IS_ERR(dev_class)) {
-        printk("%s, dev_class class_create failed\n", __func__);
-        goto class_err;
-    }   
-    // /dev
-    device_create(dev_class, NULL, devnum, NULL, "mcy_eeprom0");
-
-    printk("%s, OK!\n", __func__);
-
-    return 0;
-
-class_err:
-    cdev_del(cdev);
-cdev_err:
-    unregister_chrdev_region(devnum, 1); 
-chrdev_err:
-    return -1; 
-}
-```
-
-
-
-
-
-```c
-int mcy_eeprom_remove(struct i2c_client *client)
-{
-    printk("%s\n", __func__);
-
-    device_destroy(dev_class, devnum);
-    class_destroy(dev_class);
-
-    cdev_del(cdev);
-
-    unregister_chrdev_region(devnum, 1);
-
-    kfree(cdev);
-
-    return 0;
-}
-```
-
-
-
-
-
-```c
-struct file_operations mcy_eeprom_fops= {
-    .open = eeprom_driver_open,
-    .release = eeprom_driver_release,
-    .read = eeprom_driver_read,
-    .write = eeprom_driver_write,
-};
-```
-
-
-
-
-
-
-
-##### 7.2.3 读写函数封装
-
-###### 1）读取函数
-
-```c
-static ssize_t eeprom_driver_read(struct file *filp, char __user *buf, size_t count, loff_t *loff)
-{
-    eeprom_data_t eeprom_data;
-    unsigned char reg[2] = {0};
-    int i = 0;
-    int ret = -1; 
-
-    printk("%s\n", __func__);
-
-    memset(&eeprom_data, 0, sizeof(eeprom_data_t));
-    ret = copy_from_user(&eeprom_data, buf, count);
-    if (ret < 0) {
-        printk("%s, copy_from_user failed, ret: %d\n", __func__, ret);
-        return -1; 
-    }
-
-    reg[0] = (char)((eeprom_data.reg & 0x0000ff00) >> 8); 
-    reg[1] = (char)(eeprom_data.reg & 0x000000ff);
-
-    ret = i2c_master_send(eeprom_driver.client, reg, 2); 
-    ret = i2c_master_recv(eeprom_driver.client, eeprom_data.data, eeprom_data.len);
-
-    for (i = 0; i < eeprom_data.len; i++) {
-        printk("%s, i2c_master_recv, reg[%d]: 0x%x, data: 0x%2x\n", __func__, i, eeprom_data.reg + i, eeprom_data.data[i]);
-    }   
-
-    ret = copy_to_user(buf, &eeprom_data, count);
-    if (ret < 0) {
-        printk("%s, copy_to_user failed, ret: %d\n", __func__, ret);
-        return -1; 
-    }   
-
-    return 0;
-}
-```
-
-
-
-###### 2）写入函数
-
-```c
-static ssize_t eeprom_driver_write(struct file *filp, const char __user *buf, size_t count, loff_t *loff)
-{   
-    eeprom_data_t eeprom_data;
-    unsigned char data[18] = {0};
-    int len = 0;
-    int i = 0;
-    int ret = -1;
-
-    printk("%s\n", __func__);
-
-    memset(&eeprom_data, 0, sizeof(eeprom_data_t));
-    ret = copy_from_user(&eeprom_data, buf, count);
-    if (ret < 0) {
-        printk("%s, copy_from_user failed, ret: %d\n", __func__, ret);
-        return -1;
-    }
-
-    memcpy(&data[2], eeprom_data.data, eeprom_data.len);
-    data[0] = (char)((eeprom_data.reg & 0x0000ff00) >> 8);
-    data[1] = (char)(eeprom_data.reg & 0x000000ff);
-    len = eeprom_data.len + 2;
-
-    for (i = 0; i < len; i++) {
-        printk("%s, data[%d]: 0x%2x\n", __func__, i, data[i]);
-    }
-
-    ret = i2c_master_send(eeprom_driver.client, data, len);
-
-    return 0;
-}
-```
-
-
-
-##### 7.2.4 实例代码
-
-
+##### 实例代码
 
 ```c
 // mcy_eeprom_driver.c
@@ -2798,22 +2708,22 @@ endif
 
 
 
-
-
-
-
-
-
-
-
-
-
 ### 8. 总结
 
 
 I2C总线维护两个链表，一个是I2C驱动链表，一个是I2C设备链表，每当注册一个驱动（或设备），就会将其添加到I2C总线上相对应的I2C驱动链表（或I2C设备链表），然后遍历I2C总线的I2C设备（或I2C驱动）链表的所有设备（或驱动），通过I2C总线的匹配函数判断是否匹配，如果匹配，就调用驱动的probe函数，然后就可以在probe函数中注册字符设备，创建设备节点，实现设备操作集fops等，为应用调用提供接口；
 
 
+
+
+
+参考资料
+
+https://blog.csdn.net/shichaog/article/details/41169981
+
+《Linux设备驱动开发详解》
+
+《精通linux设备驱动程序开发》
 
 
 
