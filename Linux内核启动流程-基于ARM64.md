@@ -1,6 +1,6 @@
 ---
 title: Linux内核启动流程-基于ARM64
-date: 2020-04-17 23:13:03
+date: 2020-04-19 23:13:03
 tags: Kernel
 ---
 

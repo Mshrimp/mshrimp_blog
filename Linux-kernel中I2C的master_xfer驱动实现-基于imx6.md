@@ -12,7 +12,11 @@ tags: i2c
 
 未完成
 
+
+
 <!--more-->
+
+
 
 **注：**本文含有一些从《IMX6SDLRM.pdf》手册中获取的一些数据信息截图，如有侵权，纯属无意，还请告知，立即删除！
 
@@ -48,7 +52,7 @@ http://read.pudn.com/downloads664/sourcecode/embedded/2692975/IMX6SDLRM.pdf
 
 ##### I2C Address Register
 
-![I2C Address Register](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Address-Register.png)
+![I2C-Address-Register2](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Address-Register2.png)
 
 
 

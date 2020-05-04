@@ -1,6 +1,6 @@
 ---
 title: u-boot引导kernel启动过程
-date: 2020-04-20 21:54:40
+date: 2020-04-19 21:54:40
 tags: u-boot
 ---
 
