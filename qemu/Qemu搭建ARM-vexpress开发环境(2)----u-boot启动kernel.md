@@ -1,23 +1,14 @@
----
-title: Qemu搭建ARM vexpress开发环境(二)----u-boot启动kernel
-date: 2019-08-20 21:00:00
-tags: Qemu
-
----
-
-标签： Qemu
-
----
-
-在上文《[Qemu搭建ARM vexpress开发环境(一)](https://www.jianshu.com/p/94833e841742)》中已经简单讲述了通过Qemu直接启动Linux内核，并挂载SD卡根文件系统的方法，这种方法是直接启动内核，与实际应用中ARM板的启动方式：u-boot、kernel、rootfs有些不同。现在就来讲述下用Qemu搭建通过u-boot启动Linux内核并挂载根文件系统的方法。
-
-<!--more-->
+# Qemu搭建ARM vexpress开发环境(2)----u-boot启动kernel
 
 
 
 ## 目录
 
 [TOC]
+
+在上文《[Qemu搭建ARM vexpress开发环境(1)](https://www.jianshu.com/p/94833e841742)》中已经简单讲述了通过Qemu直接启动Linux内核，并挂载SD卡根文件系统的方法，这种方法是直接启动内核，与实际应用中ARM板的启动方式：u-boot、kernel、rootfs有些不同。现在就来讲述下用Qemu搭建通过u-boot启动Linux内核并挂载根文件系统的方法。
+
+<!--more-->
 
 
 
@@ -1032,7 +1023,7 @@ smc911x: MAC 52:54:00:12:34:56
 
 ### 7. 总结
 
-SD卡中rootfs目录是一个简易的根文件系统，可以将它制作成一个镜像文件，将镜像文件烧写到开发板，或者通过Qemu中的u-boot启动Linux内核后挂载到镜像文件上。也可以设置为通过NFS网络文件系统启动，参考下一篇文章《[Qemu搭建ARM vexpress开发环境(三)----NFS网络根文件系统](https://www.jianshu.com/p/cf46f7225db6)》。
+SD卡中rootfs目录是一个简易的根文件系统，可以将它制作成一个镜像文件，将镜像文件烧写到开发板，或者通过Qemu中的u-boot启动Linux内核后挂载到镜像文件上。也可以设置为通过NFS网络文件系统启动，参考下一篇文章《[Qemu搭建ARM vexpress开发环境(3)----NFS网络根文件系统](https://www.jianshu.com/p/cf46f7225db6)》。
 
 
 

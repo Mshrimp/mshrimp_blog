@@ -767,5 +767,5 @@ QEMU: Terminated
 ps -a | grep qemu-system-arm | awk '{print $1}' | xargs sudo kill -9
 ```
 
-本文讲述了Qemu环境启动Linux内核，并挂载SD卡中的根文件系统的一些操作步骤。如果需要在Qemu环境下以ARM开发板的正常启动流程来加载Linux内核并挂载根文件系统，可以参考下一篇文章《[Qemu搭建ARM vexpress开发环境(二)----通过u-boot启动Linux内核](https://www.jianshu.com/p/8619a6739040
+本文讲述了Qemu环境启动Linux内核，并挂载SD卡中的根文件系统的一些操作步骤。如果需要在Qemu环境下以ARM开发板的正常启动流程来加载Linux内核并挂载根文件系统，可以参考下一篇文章《[Qemu搭建ARM vexpress开发环境(2)----通过u-boot启动Linux内核](https://www.jianshu.com/p/8619a6739040
 )》。

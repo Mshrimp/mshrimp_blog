@@ -1,24 +1,14 @@
----
-title: Linux kernel中的I2C子系统
-date: 2020-04-06 14:36:52
-tags: i2c
----
-
-
-
-
-
-Linux系统定义了I2C驱动体系结构，在Linux内核中的I2C子系统中，I2C驱动共有3部分组成：I2C核心、I2C总线驱动、I2C设备驱动，这三部分组成了I2C的框架；I2C子系统中有4个重要内容：I2C总线、I2C设备、I2C驱动、I2C适配器；
-
-
-
-<!--more-->
+## linux kernel中的I2C子系统
 
 
 
 ### 目录
 
 [TOC]
+
+Linux系统定义了I2C驱动体系结构，在Linux内核中的I2C子系统中，I2C驱动共有3部分组成：I2C核心、I2C总线驱动、I2C设备驱动，这三部分组成了I2C的框架；I2C子系统中有4个重要内容：I2C总线、I2C设备、I2C驱动、I2C适配器；
+
+<!--more-->
 
 Linux内核中的I2C驱动代码位于：drivers/i2c目录；
 

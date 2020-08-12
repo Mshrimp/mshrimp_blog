@@ -1,22 +1,12 @@
----
-title: Linux-kernel中的i2c-dev驱动
-date: 2020-04-12 21:43:49
-tags: i2c
----
-
-
-
-I2C设备驱动，可以直接使用内核中i2c-dev.c文件提供的read/write或ioctl操作接口，在应用层通过read/write和ioctl系统调用实现对I2C设备的读写；也就是常说的I2C用户态驱动；用户态I2C驱动，需要在用户态封装i2c_msg结构体消息，通过内核态i2c_transfer()函数和I2C从设备通信；
-
-
-
-<!--more-->
-
-
+## linux-kernel中的i2c-dev驱动
 
 ### 目录
 
 [TOC]
+
+I2C设备驱动，可以直接使用内核中i2c-dev.c文件提供的read/write或ioctl操作接口，在应用层通过read/write和ioctl系统调用实现对I2C设备的读写；也就是常说的I2C用户态驱动；用户态I2C驱动，需要在用户态封装i2c_msg结构体消息，通过内核态i2c_transfer()函数和I2C从设备通信；
+
+<!--more-->
 
 ### 0. 简介
 
