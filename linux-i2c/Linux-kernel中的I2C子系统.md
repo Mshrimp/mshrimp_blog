@@ -1,28 +1,10 @@
 ## linux kernel中的I2C子系统
 
-
+[1.2 I2C总线驱动](#1.2 I2C总线驱动)
 
 ### 目录
 
-[0. 简述](#0. 简述)
-
-[1. I2C驱动框架](#1. I2C驱动框架)
-
-[2. 核心数据结构](2. 核心数据结构)
-
-[3. 重要的操作函数](3. 重要的操作函数)
-
-[4. 添加设备](4. 添加设备)
-
-[5. 添加驱动](5. 添加驱动)
-
-[6. 驱动和设备匹配](6. 驱动和设备匹配)
-
-[7. 实例](#7. 实例)
-
-[8. 总结](8. 总结)
-
-
+[TOC]
 
 Linux系统定义了I2C驱动体系结构，在Linux内核中的I2C子系统中，I2C驱动共有3部分组成：I2C核心、I2C总线驱动、I2C设备驱动，这三部分组成了I2C的框架；I2C子系统中有4个重要内容：I2C总线、I2C设备、I2C驱动、I2C适配器；
 
@@ -54,21 +36,17 @@ I2C驱动中有4个重要内容：I2C总线、I2C设备、I2C驱动、I2C适配�
 
 
 
-I2C总线上有两个链表，分别是i2c_driver和i2c_client三链表；当任何一个driver或client注册时，I2C总线都会调用match函数，对client.name和driver.id_table.name进行遍历匹配；如果driver.id_table中所有的id都匹配不成功，说明client没有找到对应的driver；如果匹配成功，说明client和driver是配套的，那么I2C总线就会调用自己的probe函数，然后probe函数调用driver中提供的probe函数，driver中的probe函数会对设备进行硬件初始化和后续工作；
+I2C总线上有两个链表，分别是i2c_driver和i2c_client链表；当任何一个driver或client注册时，I2C总线都会调用match函数，对client.name和driver.id_table.name进行遍历匹配；如果driver.id_table中所有的id都匹配不成功，说明client没有找到对应的driver；如果匹配成功，说明client和driver是配套的，那么I2C总线就会调用自己的probe函数，然后probe函数调用driver中提供的probe函数，driver中的probe函数会对设备进行硬件初始化和后续工作；
 
-
-
-i2c_add_adapter	// 注册adapter
-
-i2c_add_driver		// 注册driver
-
-i2c_new_device		// 注册client
+| 函数            | 说明        |
+| --------------- | ----------- |
+| i2c_add_adapter | 注册adapter |
+| i2c_add_driver  | 注册driver  |
+| i2c_new_device  | 注册client  |
 
 
 
 ### 1. I2C驱动框架
-
-
 
 
 
