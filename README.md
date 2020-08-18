@@ -1,4 +1,4 @@
-# mshrimp_blog
+# 目录
 
 
 
@@ -17,9 +17,9 @@
 
 ## i2c
 
-1. [Linux-kernel中的I2C子系统](https://github.com/Mshrimp/mshrimp_blog/blob/master/linux-i2c/Linux-kernel中的I2C子系统.md)
-2. [Linux-kernel中的i2c-dev驱动](https://github.com/Mshrimp/mshrimp_blog/blob/master/linux-i2c/Linux-kernel中的i2c-dev驱动.md)
-3. [Linux-kernel中I2C的master_xfer驱动实现-基于imx6](https://github.com/Mshrimp/mshrimp_blog/blob/master/linux-i2c/Linux-kernel中I2C的master_xfer驱动实现-基于imx6.md)
+1. [linux-kernel中的i2c子系统](https://github.com/Mshrimp/mshrimp_blog/blob/master/linux-i2c/linux-kernel中的i2c子系统.md)
+2. [linux-kernel中的i2c-dev驱动](https://github.com/Mshrimp/mshrimp_blog/blob/master/linux-i2c/linux-kernel中的i2c-dev驱动.md)
+3. [linux-kernel中i2c的master_xfer驱动实现-基于imx6](https://github.com/Mshrimp/mshrimp_blog/blob/master/linux-i2c/linux-kernel中i2c的master_xfer驱动实现-基于imx6.md)
 
 
 

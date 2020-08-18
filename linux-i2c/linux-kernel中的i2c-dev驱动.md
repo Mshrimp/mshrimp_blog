@@ -18,7 +18,7 @@ I2C设备驱动，可以直接使用内核中i2c-dev.c文件提供的read/write�
 
 
 
-![Linux的I2C子系统框架](Linux-kernel中的i2c-dev驱动/Linux的I2C子系统框架.png)
+![Linux的I2C子系统框架](linux-kernel中的i2c-dev驱动/Linux的I2C子系统框架.png)
 
 
 

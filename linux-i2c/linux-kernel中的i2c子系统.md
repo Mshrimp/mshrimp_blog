@@ -76,7 +76,7 @@ Linux的I2C体系结构分为3个部分：
 
 
 
-![Linux的I2C子系统框架](Linux-kernel中的I2C子系统/Linux的I2C子系统框架.png)
+![Linux的I2C子系统框架](linux-kernel中的i2c子系统/Linux的I2C子系统框架.png)
 
 
 
@@ -249,7 +249,7 @@ struct i2c_driver {
 
 ##### 2.1.3 总线和设备关系
 
-![I2C设备和驱动的关系](Linux-kernel中的I2C子系统/I2C设备和驱动的关系.png)
+![I2C设备和驱动的关系](linux-kernel中的i2c子系统/I2C设备和驱动的关系.png)
 
 
 
@@ -459,7 +459,7 @@ struct i2c_driver       I2C（从机）设备驱动信息
 
 
 
-![I2C总线层和设备层的关系](Linux-kernel中的I2C子系统/I2C总线层和设备层的关系.png)
+![I2C总线层和设备层的关系](linux-kernel中的i2c子系统/I2C总线层和设备层的关系.png)
 
 
 
@@ -469,7 +469,7 @@ struct i2c_driver       I2C（从机）设备驱动信息
 
 
 
-![I2C数据结构间的关系](Linux-kernel中的I2C子系统/I2C数据结构间的关系.png)
+![I2C数据结构间的关系](linux-kernel中的i2c子系统/I2C数据结构间的关系.png)
 
 
 
@@ -2242,7 +2242,7 @@ i2c_device_probe()函数中，如果配置了设备树，i2c总线在match函数
 
 
 
-![I2C注册匹配过程](Linux-kernel中的I2C子系统/I2C注册匹配过程.png)
+![I2C注册匹配过程](linux-kernel中的i2c子系统/I2C注册匹配过程.png)
 
 
 
