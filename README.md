@@ -22,6 +22,10 @@
 3. [linux-kernel中i2c的master_xfer驱动实现-基于imx6](https://github.com/Mshrimp/mshrimp_blog/blob/master/linux-i2c/linux-kernel中i2c的master_xfer驱动实现-基于imx6.md)
 
 
+## tty
+
+1. [linux-kernel中的tty驱动](https://github.com/Mshrimp/mshrimp_blog/blob/master/linux-tty/linux-kernel中的tty驱动.md)
+2. [tty_read函数的实现过程](https://github.com/Mshrimp/mshrimp_blog/blob/master/linux-tty/tty_read函数的实现过程.md)
 
 
 
