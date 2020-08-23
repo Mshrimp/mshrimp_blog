@@ -1,3 +1,5 @@
+
+
 ## linux-kernel中的tty驱动
 
 ### 目录
@@ -6,7 +8,7 @@
 
 [1. tty核心](#1-tty核心)
 
-[2. tty线路规程](2-tty线路规程)
+[2. tty线路规程](#2-tty线路规程)
 
 [3. tty驱动](#3-tty驱动)
 
@@ -23,9 +25,7 @@
 
 
 
-
-
-TTY()
+TTY 是 Teletypewriter的缩写（Teleprinter、TeletypewriterTele-Type，缩写为 TTY），中文电传打字机简称电传，是远距离打印交换的编写形式；
 
 
 在linux中tty表示各种终端，通常是和硬件相对应，tty用来指任何的串口设备，如：输入设备键盘鼠标、输出设备显示器、虚拟的pty等；
@@ -34,10 +34,6 @@ TTY()
 tty驱动、uart驱动存在密切联系，tty设备包括uart，uart设备的工作依赖于tty设备，uart是tty的上层，内核中有完整的tty驱动，uart设备可以使用tty驱动进行封装；而内核中也有完整的uart驱动，两者相互独立又密切相关；本文主要讲解tty驱动相关的内容，以控制台驱动为例讲述tty驱动的应用，关于uart驱动方面内容，请参考下一文uart驱动；
 
 
-```mermaid
-graph TB
-	read(read/write)-->tty(tty)-->uart(uart)-->8250(8250)
-```
 
 
 tty驱动程序的核心在标准字符设备驱动层之下；
@@ -55,7 +51,7 @@ linux内核中的tty层次结构，包含：tty核心、tty线路规程、tty驱
 3. tty驱动(tty_driver)：tty设备对应的驱动，将字符转换成硬件可以理解的字符，将其传给硬件设备；并从硬件接收数据；
 
 
-![tty层次关系](Linux-kernel中的uart驱动/tty层次关系.jpg)
+![tty层次关系](linux-kernel中的tty驱动/tty层次关系.jpg)
 
 
 tty核心和线路规程由内核提供，驱动工程师只需要完成tty驱动部分代码就可以使用tty了；
@@ -996,8 +992,77 @@ EXPORT_SYMBOL(tty_unregister_ldisc);
 
 
 
+**1) open**
 
-在线路规程的打开操作中，主要是对一些线路规程的数据进行初始化，并没有太复杂的操作；同样线路规程的关闭操作中，主要是释放申请的变量资源；此处略过，不再过多描述；
+在tty核心的打开操作中会调用打开线路规程，该操作主要是申请一些资源，并对一些线路规程的数据进行初始化；申请n_tty_data结构体，read_buf成员作为读取缓冲区；
+
+```c
+// n_tty.c
+static int n_tty_open(struct tty_struct *tty)
+{
+    struct n_tty_data *ldata;
+
+    /* Currently a malloc failure here can panic */
+    ldata = vzalloc(sizeof(*ldata));
+    if (!ldata)
+        return -ENOMEM;
+
+    ldata->overrun_time = jiffies;
+    mutex_init(&ldata->atomic_read_lock);
+    mutex_init(&ldata->output_lock);
+
+    tty->disc_data = ldata;
+    tty->closing = 0; 
+    /* indicate buffer work may resume */
+    clear_bit(TTY_LDISC_HALTED, &tty->flags);
+    n_tty_set_termios(tty, NULL);
+    tty_unthrottle(tty);
+    return 0;
+}
+```
+
+n_tty_data结构体中的read_buf缓冲区是线性数组，但是却是作为环形缓冲区使用的；
+
+```c
+// n_tty.c
+struct n_tty_data {
+    /* producer-published */
+    size_t read_head;
+    
+    /* shared by producer and consumer */
+    char read_buf[N_TTY_BUF_SIZE];
+    
+    /* consumer-published */
+    size_t read_tail;
+}
+```
+
+```c
+tty->read_buf[]	// 环形缓冲区；
+tty->read_tail	// 指向缓冲区当前可以读取的第一个字符；
+tty->read_head	// 指向缓冲区当前可以写入的第一个地址；
+```
+
+tty_unthrottle()函数，打开缓冲区阀门，使缓冲区能够接收到硬件发送过来的数据；
+
+
+
+**2) close**
+
+同样线路规程的关闭操作中，主要是释放申请的变量资源；
+
+```c
+static void n_tty_close(struct tty_struct *tty)
+{
+    struct n_tty_data *ldata = tty->disc_data;
+
+    if (tty->link)
+        n_tty_packet_mode_flush(tty);
+
+    vfree(ldata);
+    tty->disc_data = NULL;
+}
+```
 
 
 
@@ -1465,7 +1530,7 @@ tty类型的驱动，以串口驱动为例，在serial_core.c文件中实现；
 ### 4. 总结
 
 
-![tty框架](linux-kernel中的tty驱动/tty框架.png)
+![tty读写过程中的函数调用流程](linux-kernel中的tty驱动/tty读写过程中的函数调用流程.png)
 
 
 
@@ -1484,6 +1549,8 @@ tty类型的驱动，以串口驱动为例，在serial_core.c文件中实现；
 
 
 
+
+
 笔记计划：
 
 1. tty驱动-->控制台驱动
@@ -1492,8 +1559,8 @@ tty类型的驱动，以串口驱动为例，在serial_core.c文件中实现；
 2. uart驱动-->8250驱动
 
 
-3. 键盘驱动-->PS/2键盘	-->USB键盘
-4. USB转串口驱动
+3. 键盘驱动-->PS/2键盘	-->usb键盘
+4. usb转串口驱动
 
 
 
