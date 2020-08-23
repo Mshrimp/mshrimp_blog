@@ -50,8 +50,21 @@ linux内核中的tty层次结构，包含：tty核心、tty线路规程、tty驱
 
 3. tty驱动(tty_driver)：tty设备对应的驱动，将字符转换成硬件可以理解的字符，将其传给硬件设备；并从硬件接收数据；
 
-
 ![tty层次关系](linux-kernel中的tty驱动/tty层次关系.jpg)
+
+
+
+
+
+![图片1](https://raw.githubusercontent.com/Mshrimp/mshrimp_blog/master/linux-tty/linux-kernel%E4%B8%AD%E7%9A%84tty%E9%A9%B1%E5%8A%A8/tty%E5%B1%82%E6%AC%A1%E5%85%B3%E7%B3%BB.jpg)
+
+
+
+2
+
+![图片2](https://raw.githubusercontent.com/Mshrimp/mshrimp_blog/master/linux-tty/linux-kernel中的tty驱动/tty层次关系.jpg)
+
+
 
 
 tty核心和线路规程由内核提供，驱动工程师只需要完成tty驱动部分代码就可以使用tty了；
