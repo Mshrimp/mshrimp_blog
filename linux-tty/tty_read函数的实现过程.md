@@ -1,7 +1,24 @@
 ## tty_read函数的实现过程
 
-
 #### 目录
+
+[简述](#简述)
+
+[tty_read](#tty_read)
+
+[控制台读取](#控制台读取)
+
+[单次读取限制](#单次读取限制)
+
+[读取缓冲区](#读取缓冲区)
+
+[缓冲区阀门](#缓冲区阀门)
+
+[数据读取](#数据读取)
+
+[总结](#总结)
+
+[参考资料](#参考资料)
 
 
 [TOC]
@@ -143,7 +160,7 @@ n_tty_read()函数的开始部分，用于一些数据的初始化和校验；
 当输入缓冲区中的数据超过了最低限度数据量minimum_to_wake时，要唤醒正在等待从该设备读取数据的进程；minimum_to_wake的值一般都是1，即缓冲区中的数据量超过1个，就要唤醒读取进程；
 
 
-#### 单次读取数量限制
+#### 单次读取限制
 
 
 minimum = MIN_CHAR(tty)操作，获取termios.c_cc[VMIN]数组的值，作为本次读取操作能够读取到的最大数据量；termios.c_cc[VMIN]数组的值，可以在打开控制台之后通过设置termios参数进行设置；
@@ -278,6 +295,80 @@ static inline int input_available_p(struct tty_struct *tty, int poll)
 
 
 在非规范模式下，缓冲区中的字符是未经加工的，不存在缓冲行的概念，在原始模式可以把字符'\0'复制到用户空间，这里使用copy_from_read_buf()函数进行成片的拷贝；由于缓冲区是环形的，缓冲的字符可能跨越环形缓冲区的结尾，被分割成两部分，所以要使用copy_from_read_buf()函数两次；copy_from_read_buf()函数的实现在后面讲述；
+
+
+
+#### 读取缓冲区
+
+在控制台的线路规程中，使用struct n_tty_data结构体表示该设备的数据；其中包含的read_buf成员作为读取的缓冲区使用；
+
+```c
+// n_tty.c
+struct n_tty_data {
+    /* producer-published */
+    size_t read_head;
+    
+    /* shared by producer and consumer */
+    char read_buf[N_TTY_BUF_SIZE];
+    
+    /* consumer-published */
+    size_t read_tail;
+}
+```
+
+read_buf是一个N_TTY_BUF_SIZE字节的数组；
+
+```c
+// linux/tty.h
+#define N_TTY_BUF_SIZE 4096
+```
+
+定义的缓冲区是线性数组，但是却是作为环形缓冲区使用的；read_head成员是环形缓冲区空闲位置的开始，产生数据的进程从read_head位置开始往缓冲区写入数据；read_tail成员是环形缓冲区保存数据位置的开始，读取数据的进程从read_tail位置开始从缓冲区读取数据；
+
+以下针对具体的读取操作进行说明；
+
+```c
+tty->read_buf[]	// 环形缓冲区；
+tty->read_tail	// 指向缓冲区当前可以读取的第一个字符；
+tty->read_head	// 指向缓冲区当前可以写入的第一个地址；
+```
+
+read_cnt是通过缓冲区的read_head-read_tail计算得到，表示缓冲行中的已保存字符个数；
+
+```c
+// n_tty.c
+static inline size_t read_cnt(struct n_tty_data *ldata)
+{
+    return ldata->read_head - ldata->read_tail;
+}
+```
+
+n_tty_data结构体在线路规程被打开时申请结构体空间，并进行初始化；
+
+```c
+// n_tty.c
+static int n_tty_open(struct tty_struct *tty)
+{
+    struct n_tty_data *ldata;
+
+    /* Currently a malloc failure here can panic */
+    ldata = vzalloc(sizeof(*ldata));
+    if (!ldata)
+        return -ENOMEM;
+
+    ldata->overrun_time = jiffies;
+    mutex_init(&ldata->atomic_read_lock);
+    mutex_init(&ldata->output_lock);
+
+    tty->disc_data = ldata;
+    tty->closing = 0; 
+    /* indicate buffer work may resume */
+    clear_bit(TTY_LDISC_HALTED, &tty->flags);
+    n_tty_set_termios(tty, NULL);
+    tty_unthrottle(tty);
+    return 0;
+}
+```
 
 
 
@@ -546,3 +637,10 @@ static int copy_from_read_buf(struct tty_struct *tty,
 
 
 《Linux内核情景分析》----控制台驱动
+
+
+
+
+
+[回到目录](目录)
+
