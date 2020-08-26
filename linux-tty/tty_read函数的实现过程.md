@@ -75,12 +75,13 @@ ld->ops->read(tty, file, buf, count)
 
 
 
-```c
+```CQL
 // n_tty.c
 struct tty_ldisc_ops tty_ldisc_N_TTY = {
     .name            = "n_tty",
     .read            = n_tty_read,
     .write           = n_tty_write,
+    ......
 };
 ```
 
@@ -130,10 +131,10 @@ n_tty_read()函数的开始部分，用于一些数据的初始化和校验；
 
 
 ```c
-	DEFINE_WAIT_FUNC(wait, woken_wake_function);
+    DEFINE_WAIT_FUNC(wait, woken_wake_function);
     down_read(&tty->termios_rwsem);
 
-	minimum = time = 0;
+    minimum = time = 0;
     timeout = MAX_SCHEDULE_TIMEOUT;
     if (!ldata->icanon) {
         minimum = MIN_CHAR(tty);
@@ -201,9 +202,9 @@ minimum = MIN_CHAR(tty)操作，获取termios.c_cc[VMIN]数组的值，作为本
 
 
 ```c
-	unsigned char __user *b = buf;
-	......
-		if (((minimum - (b - buf)) < ldata->minimum_to_wake) &&
+    unsigned char __user *b = buf;
+    ......
+        if (((minimum - (b - buf)) < ldata->minimum_to_wake) &&
             ((minimum - (b - buf)) >= 1))
             ldata->minimum_to_wake = (minimum - (b - buf));
 ```
