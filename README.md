@@ -2,6 +2,12 @@
 
 
 
+## elf
+
+1. [linux中ELF格式二进制程序](https://github.com/Mshrimp/mshrimp_blog/blob/master/elf/linux中ELF格式二进制程序.md)
+
+
+
 ## linux driver
 
 1. [Linux字符设备驱动](https://github.com/Mshrimp/mshrimp_blog/blob/master/linux-driver/Linux字符设备驱动.md)
