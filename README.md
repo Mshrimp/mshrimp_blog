@@ -2,9 +2,16 @@
 
 
 
-## elf
+* elf
 
-1. [linux中ELF格式二进制程序](https://github.com/Mshrimp/mshrimp_blog/blob/master/elf/linux中ELF格式二进制程序.md)
+  * [linux程序编译过程简析](elf/linux程序编译过程简析.md)
+  * [静态链接和动态链接](elf/静态链接和动态链接.md)
+
+  * [linux中ELF格式二进制程序](elf/linux中ELF格式二进制程序.md)
+  * [linux中ELF二进制程序解析----ELF文件实例解析](elf/linux中ELF二进制程序解析----ELF文件实例解析.md)
+  * [linux应用程序加载过程分析](elf/linux应用程序加载过程分析.md)
+
+
 
 
 
