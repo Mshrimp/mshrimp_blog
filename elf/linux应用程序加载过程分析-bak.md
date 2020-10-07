@@ -1,3 +1,6 @@
+linux应用程序加载过程分析
+
+
 ## linux应用程序加载过程分析
 
 
@@ -53,14 +56,23 @@ execve()系统调用是通过do_execve()函数实现的；do_execve()函数是�
 
 
 ```c
+
 // fs/exec.c
+
 SYSCALL_DEFINE3(execve,
+
         const char __user *, filename,
+
         const char __user *const __user *, argv,
+
         const char __user *const __user *, envp)
+
 {
+
     return do_execve(getname(filename), argv, envp);
+
 }
+
 ```
 
 
@@ -82,14 +94,23 @@ __user说明，指向程序参数的argv数组指针和指向环境变量的envp
 
 
 ```c
+
 int do_execve(struct filename *filename,
+
     const char __user *const __user *__argv,
+
     const char __user *const __user *__envp)
+
 {
+
     struct user_arg_ptr argv = { .ptr.native = __argv };
+
     struct user_arg_ptr envp = { .ptr.native = __envp };
+
     return do_execveat_common(AT_FDCWD, filename, argv, envp, 0);
+
 }
+
 ```
 
 
@@ -98,17 +119,29 @@ int do_execve(struct filename *filename,
 
 
 ```c
+
 static int do_execveat_common(int fd, struct filename *filename,
+
                   struct user_arg_ptr argv,
+
                   struct user_arg_ptr envp,
+
                   int flags)
+
 {
+
     ......
+
     retval = exec_binprm(bprm);
+
     if (retval < 0)
+
         goto out;
+
     ......
+
 }
+
 ```
 
 
@@ -117,8 +150,11 @@ static int do_execveat_common(int fd, struct filename *filename,
 
 
 ```mermaid
+
 graph TB
+
 do_execve-->do_execveat_common-->exec_binprm-->search_binary_handler-->load_binary
+
 ```
 
 
@@ -131,44 +167,82 @@ do_execve-->do_execveat_common-->exec_binprm-->search_binary_handler-->load_bina
 
 
 ```c
+
 // include/uapi/linux/binfmts.h
+
 #define BINPRM_BUF_SIZE 128
 
+
 // include/linux/binfmts.h
+
 struct linux_binprm {
+
     char buf[BINPRM_BUF_SIZE];	// 保存可执行文件的头128字节
+
 #ifdef CONFIG_MMU
+
     struct vm_area_struct *vma;
+
     unsigned long vma_pages;
+
 #else
+
 # define MAX_ARG_PAGES  32
+
     struct page *page[MAX_ARG_PAGES];
+
 #endif
+
     struct mm_struct *mm;
+
     unsigned long p; /* current top of mem */
+
     unsigned int
+
         cred_prepared:1,/* true if creds already prepared (multiple
+
                  * preps happen for interpreters) */
+
         cap_effective:1;/* true if has elevated effective capabilities,
+
                  * false if not; except for init which inherits
+
                  * its parent's caps anyway */
+
 #ifdef __alpha__
+
     unsigned int taso:1;
+
 #endif
+
     unsigned int recursion_depth; /* only for search_binary_handler() */
+
     struct file * file;	// 要执行的文件
+
     struct cred *cred;  /* new credentials */
+
     int unsafe;     /* how unsafe this exec is (mask of LSM_UNSAFE_*) */
+
     unsigned int per_clear; /* bits to clear in current->personality */
+
     int argc, envc;	// 命令行参数和环境变量数目
+
     const char * filename;  /* Name of binary as seen by procps */
+
     const char * interp;    /* Name of the binary really executed. Most
+
                    of the time same as filename, but could be
+
                    different for binfmt_{misc,script} */
+
     unsigned interp_flags;
+
     unsigned interp_data;
+
     unsigned long loader, exec;
+
 };
+
 ```
 
 
@@ -188,35 +262,62 @@ do_execveat_common()函数用来执行一个新的可执行程序；do_execveat_
 
 
 ```c
+
 static int do_execveat_common(int fd, struct filename *filename,
+
                   struct user_arg_ptr argv,
+
                   struct user_arg_ptr envp,
+
                   int flags)
+
 {
+
     char *pathbuf = NULL;
+
     struct linux_binprm *bprm;
+
     struct file *file;
+
     struct files_struct *displaced;
+
     int retval;
 
+
     if (IS_ERR(filename))
+
         return PTR_ERR(filename);
 
+
     /*
+
      * We move the actual failure in case of RLIMIT_NPROC excess from
+
      * set*uid() to execve() because too many poorly written programs
+
      * don't check setuid() return code.  Here we additionally recheck
+
      * whether NPROC limit is still exceeded.
+
      */
+
     if ((current->flags & PF_NPROC_EXCEEDED) &&
+
         atomic_read(&current_user()->processes) > rlimit(RLIMIT_NPROC)) {
+
         retval = -EAGAIN;
+
         goto out_ret;
+
     }
 
+
     /* We're below the limit (still or again), so we don't want to make
+
      * further execve() calls fail. */
+
     current->flags &= ~PF_NPROC_EXCEEDED;
+
 ```
 
 
@@ -225,11 +326,17 @@ static int do_execveat_common(int fd, struct filename *filename,
 
 
 ```c
+
     struct files_struct *displaced;
+
     ......
+
     retval = unshare_files(&displaced);
+
     if (retval)
+
         goto out_ret;
+
 ```
 
 
@@ -242,12 +349,19 @@ unshare_files()是Linux中名称空间的控制函数，files_struct是包含在
 
 
 ```c
+
     struct linux_binprm *bprm;
+
     ......
+
     retval = -ENOMEM;
+
     bprm = kzalloc(sizeof(*bprm), GFP_KERNEL);
+
     if (!bprm)
+
         goto out_files;
+
 ```
 
 
@@ -257,9 +371,13 @@ unshare_files()是Linux中名称空间的控制函数，files_struct是包含在
 
 
 ```c
+
     retval = prepare_bprm_creds(bprm);
+
     if (retval)
+
         goto out_free;
+
 ```
 
 
@@ -267,18 +385,26 @@ prepare_bprm_creds()函数，用户复制当前进程的cred结构，并增加�
 
 
 ```c
+
     check_unsafe_exec(bprm);
+
     current->in_execve = 1;
+
 ```
 
 
 
 
 ```c
+
     file = do_open_execat(fd, filename, flags);
+
     retval = PTR_ERR(file);
+
     if (IS_ERR(file))
+
         goto out_unmark;
+
 ```
 
 
@@ -288,7 +414,9 @@ prepare_bprm_creds()函数，用户复制当前进程的cred结构，并增加�
 
 
 ```c
+
     sched_exec();
+
 ```
 
 
@@ -298,38 +426,66 @@ sched_exec()函数用来选择负载最小的CPU，并完成CPU切换，使用�
 
 
 ```c
+
     bprm->file = file;
+
     if (fd == AT_FDCWD || filename->name[0] == '/') {
+
         bprm->filename = filename->name;
+
     } else {
+
         if (filename->name[0] == '\0')
+
             pathbuf = kasprintf(GFP_TEMPORARY, "/dev/fd/%d", fd);
+
         else
+
             pathbuf = kasprintf(GFP_TEMPORARY, "/dev/fd/%d/%s",
+
                         fd, filename->name);
+
         if (!pathbuf) {
+
             retval = -ENOMEM;
+
             goto out_unmark;
+
         }
+
         /*
+
          * Record that a name derived from an O_CLOEXEC fd will be
+
          * inaccessible after exec. Relies on having exclusive access to
+
          * current->files (due to unshare_files above).
+
          */
+
         if (close_on_exec(fd, rcu_dereference_raw(current->files->fdt)))
+
             bprm->interp_flags |= BINPRM_FLAGS_PATH_INACCESSIBLE;
+
         bprm->filename = pathbuf;
+
     }
+
     bprm->interp = bprm->filename;
+
 ```
 
 
 
 
 ```c
+
     retval = bprm_mm_init(bprm);
+
     if (retval)
+
         goto out_unmark;
+
 ```
 
 
@@ -339,13 +495,20 @@ bprm_mm_init()函数用来创建进程执行需要的虚拟内存，通过mm_all
 
 
 ```c
+
     bprm->argc = count(argv, MAX_ARG_STRINGS);
+
     if ((retval = bprm->argc) < 0)
+
         goto out;
 
+
     bprm->envc = count(envp, MAX_ARG_STRINGS);
+
     if ((retval = bprm->envc) < 0)
+
         goto out;
+
 ```
 
 
@@ -355,9 +518,13 @@ bprm_mm_init()函数用来创建进程执行需要的虚拟内存，通过mm_all
 
 
 ```c
+
     retval = prepare_binprm(bprm);
+
     if (retval < 0)
+
         goto out;
+
 ```
 
 
@@ -367,18 +534,29 @@ prepare_binprm()函数获取一些可执行文件的信息，并保存到linux_b
 
 
 ```c
+
     retval = copy_strings_kernel(1, &bprm->filename, bprm);
+
     if (retval < 0)
+
         goto out;
+
 
     bprm->exec = bprm->p;
+
     retval = copy_strings(bprm->envc, envp, bprm);
+
     if (retval < 0)
+
         goto out;
 
+
     retval = copy_strings(bprm->argc, argv, bprm);
+
     if (retval < 0)
+
         goto out;
+
 ```
 
 
@@ -388,9 +566,13 @@ prepare_binprm()函数获取一些可执行文件的信息，并保存到linux_b
 
 
 ```c
+
     retval = exec_binprm(bprm);
+
     if (retval < 0)
+
         goto out;
+
 ```
 
 
@@ -405,27 +587,46 @@ exec_binprm()函数是do_execveat_common()中最核心的操作，用来执行li
 
 
 ```c
+
 static int exec_binprm(struct linux_binprm *bprm)
+
 {
+
     pid_t old_pid, old_vpid;
+
     int ret;
 
+
     /* Need to fetch pid before load_binary changes it */
+
     old_pid = current->pid;
+
     rcu_read_lock();
+
     old_vpid = task_pid_nr_ns(current, task_active_pid_ns(current->parent));
+
     rcu_read_unlock();
 
+
     ret = search_binary_handler(bprm);
+
     if (ret >= 0) {
+
         audit_bprm(bprm);
+
         trace_sched_process_exec(current, old_pid, bprm);
+
         ptrace_event(PTRACE_EVENT_EXEC, old_vpid);
+
         proc_exec_connector(current);
+
     }
 
+
     return ret;
+
 }
+
 ```
 
 
@@ -486,24 +687,43 @@ search_binary_handler()函数识别二进制程序，根据可执行文件的类
 
 
 ```c
+
 int search_binary_handler(struct linux_binprm *bprm)
+
 {
+
     ......
+
  retry:
+
     read_lock(&binfmt_lock);
+
     list_for_each_entry(fmt, &formats, lh) {	// 遍历formats链表
+
         if (!try_module_get(fmt->module))
+
             continue;
+
         read_unlock(&binfmt_lock);
+
         bprm->recursion_depth++;
+
         retval = fmt->load_binary(bprm);	// 通过load_binary()加载可执行程序
+
         read_lock(&binfmt_lock);
+
         put_binfmt(fmt);
+
         bprm->recursion_depth--;
+
     }
+
     read_unlock(&binfmt_lock);
+
     ......
+
 }
+
 ```
 
 
@@ -528,15 +748,25 @@ Linux内核支持多种可执行程序格式，内核对所支持的每种格式
 
 
 ```c
+
 // include/linux/binfmts.h
+
 struct linux_binfmt {
+
     struct list_head lh;
+
     struct module *module;
+
     int (*load_binary)(struct linux_binprm *);	// 加载新的进程
+
     int (*load_shlib)(struct file *);	// 加载动态共享库
+
     int (*core_dump)(struct coredump_params *cprm);	// 将当前进程上下文保存到文件
+
     unsigned long min_coredump; /* minimal dump size */
+
 };
+
 ```
 
 
@@ -582,33 +812,59 @@ struct linux_binfmt结构体保存在内核管理的链表中，链表头是form
 
 
 ```c
+
 // include/linux/binfmts.h
+
 /* Registration of default binfmt handlers */
+
 static inline void register_binfmt(struct linux_binfmt *fmt)
+
 {
+
     __register_binfmt(fmt, 0);
+
 }
+
 
 // fs/exec.c
+
 void __register_binfmt(struct linux_binfmt * fmt, int insert)
+
 {
+
     BUG_ON(!fmt);
+
     if (WARN_ON(!fmt->load_binary))
+
         return;
+
     write_lock(&binfmt_lock);
+
     insert ? list_add(&fmt->lh, &formats) :
+
          list_add_tail(&fmt->lh, &formats);
+
     write_unlock(&binfmt_lock);
+
 }
+
 EXPORT_SYMBOL(__register_binfmt);
 
+
 void unregister_binfmt(struct linux_binfmt * fmt)
+
 {
+
     write_lock(&binfmt_lock);
+
     list_del(&fmt->lh);
+
     write_unlock(&binfmt_lock);
+
 }
+
 EXPORT_SYMBOL(unregister_binfmt);
+
 ```
 
 
@@ -626,14 +882,23 @@ EXPORT_SYMBOL(unregister_binfmt);
 
 
 ```c
+
 // fs/binfmt_elf.c
+
 static struct linux_binfmt elf_format = {
+
     .module     = THIS_MODULE,
+
     .load_binary    = load_elf_binary,
+
     .load_shlib = load_elf_library,
+
     .core_dump  = elf_core_dump,
+
     .min_coredump   = ELF_EXEC_PAGESIZE,
+
 };
+
 ```
 
 
@@ -641,21 +906,35 @@ elf_format对象用来支持ELF文件的执行操作，必须像内核注册elf_
 
 
 ```c
+
 // fs/binfmt_elf.c
+
 static int __init init_elf_binfmt(void)
+
 {
+
     register_binfmt(&elf_format);
+
     return 0;
+
 }
+
 
 static void __exit exit_elf_binfmt(void)
+
 {
+
     /* Remove the COFF and ELF loaders. */
+
     unregister_binfmt(&elf_format);
+
 }
 
+
 core_initcall(init_elf_binfmt);
+
 module_exit(exit_elf_binfmt);
+
 ```
 
 
@@ -693,6 +972,7 @@ load_elf_binary()函数执行的最后，使用start_thread()函数，修改pt_r
 
 
 [linux可执行文件的加载和运行](http://blog.chinaunix.net/uid-12127321-id-2957869.html)
+
 
 
 
